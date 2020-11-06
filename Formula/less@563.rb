@@ -19,7 +19,6 @@ class LessAT563 < Formula
   def install
     ENV["CC"] = Formula["llvm"].opt_bin/"clang"
     ENV.append "LDFLAGS", "-L#{Formula["ncurses"].opt_lib}"
-    ENV.append "LDFLAGS", "-L#{Formula["llvm"].opt_lib}"
     ENV.append "CPPFLAGS", "-I#{Formula["pcre2"].opt_include}"
     system "./configure", "--prefix=#{prefix}", "--with-regex=pcre2", "--mandir=#{man}"
     system "make", "install"
