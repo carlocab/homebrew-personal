@@ -14,9 +14,13 @@ class LessAT563 < Formula
   depends_on "ncurses"
   depends_on "llvm" => :build
 
+  conflicts_with "less", because: "because less@563 and less both install less binaries"
+
   def install
-    ENV.append "CC", "/usr/local/opt/llvm/bin/clang"
-    system "./configure", "--prefix=#{prefix}", "--with-regex=pcre"
+    ENV["CC"] = Formula["llvm"].opt_bin/"clang"
+    ENV.append "LDFLAGS", "-L#{Formula["ncurses"].opt_lib}"
+    ENV.append "LDFLAGS", "-L#{Formula["llvm"].opt_lib}"
+    system "./configure", "--prefix=#{prefix}", "--with-regex=pcre", "--mandir=#{man}"
     system "make", "install"
   end
 
