@@ -2,7 +2,7 @@ class LessAT563 < Formula
   desc "Pager program similar to more"
   homepage "http://www.greenwoodsoftware.com/less/index.html"
   url "http://www.greenwoodsoftware.com/less/less-563.tar.gz"
-  sha256 "ff165275859381a63f19135a8f1f6c5a194d53ec3187f94121ecd8ef0795fe3d"
+  sha256 "ce5b6d2b9fc4442d7a07c93ab128d2dff2ce09a1d4f2d055b95cf28dd0dc9a9a"
   license "GPL-3.0-or-later"
 
   livecheck do
