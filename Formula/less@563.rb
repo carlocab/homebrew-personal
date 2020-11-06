@@ -10,9 +10,9 @@ class LessAT563 < Formula
     regex(/less[._-]v?(\d+).+?released.+?general use/i)
   end
 
-  depends_on "pcre2"
-  depends_on "ncurses"
   depends_on "llvm" => :build
+  depends_on "ncurses"
+  depends_on "pcre2"
 
   conflicts_with "less", because: "less@563 and less both install less binaries"
 
