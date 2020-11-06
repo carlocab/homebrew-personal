@@ -10,7 +10,7 @@ class LessAT563 < Formula
     regex(/less[._-]v?(\d+).+?released.+?general use/i)
   end
 
-  depends_on "pcre"
+  depends_on "pcre2"
   depends_on "ncurses"
   depends_on "llvm" => :build
 
@@ -20,7 +20,8 @@ class LessAT563 < Formula
     ENV["CC"] = Formula["llvm"].opt_bin/"clang"
     ENV.append "LDFLAGS", "-L#{Formula["ncurses"].opt_lib}"
     ENV.append "LDFLAGS", "-L#{Formula["llvm"].opt_lib}"
-    system "./configure", "--prefix=#{prefix}", "--with-regex=pcre", "--mandir=#{man}"
+    ENV.append "CPPFLAGS", "-L#{Formula["pcre2"].opt_include}"
+    system "./configure", "--prefix=#{prefix}", "--with-regex=pcre2", "--mandir=#{man}"
     system "make", "install"
   end
 
