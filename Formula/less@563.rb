@@ -14,7 +14,7 @@ class LessAT563 < Formula
   depends_on "ncurses"
   depends_on "llvm" => :build
 
-  conflicts_with "less", because: "because less@563 and less both install less binaries"
+  conflicts_with "less", because: "less@563 and less both install less binaries"
 
   def install
     ENV["CC"] = Formula["llvm"].opt_bin/"clang"
