@@ -10,16 +10,20 @@ class LessAT563 < Formula
     regex(/less[._-]v?(\d+).+?released.+?general use/i)
   end
 
-  depends_on "llvm" => :build
   depends_on "ncurses"
   depends_on "pcre2"
 
   conflicts_with "less", because: "less@563 and less both install less binaries"
 
+  if MacOS.version >= :catalina
+    depends_on "gcc" => :build
+    fails_with :clang do
+      build 1200
+      cause "Cannot find terminal libraries - configure failed"
+    end
+  end
+
   def install
-    ENV["CC"] = Formula["llvm"].opt_bin/"clang"
-    ENV.append "LDFLAGS", "-L#{Formula["ncurses"].opt_lib}"
-    ENV.append "CPPFLAGS", "-I#{Formula["pcre2"].opt_include}"
     system "./configure", "--prefix=#{prefix}", "--with-regex=pcre2", "--mandir=#{man}"
     system "make", "install"
   end
