@@ -13,7 +13,7 @@ class LessNcurses < Formula
   depends_on "ncurses"
   depends_on "pcre2"
 
-  conflicts_with "less", because: "less@563 and less both install less binaries"
+  conflicts_with "less", because: "less-ncurses and less both install less binaries"
 
   if MacOS.version >= :catalina
     depends_on "gcc" => :build
