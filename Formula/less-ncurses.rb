@@ -1,4 +1,4 @@
-class LessAT563 < Formula
+class LessNcurses < Formula
   desc "Pager program similar to more"
   homepage "http://www.greenwoodsoftware.com/less/index.html"
   url "http://www.greenwoodsoftware.com/less/less-563.tar.gz"
