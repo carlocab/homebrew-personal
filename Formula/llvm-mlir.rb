@@ -45,7 +45,6 @@ class LlvmMlir < Formula
   # We intentionally use Make instead of Ninja.
   # See: Homebrew/homebrew-core/issues/35513
   depends_on "cmake" => :build
-  depends_on "ninja" => :build
 
   uses_from_macos "llvm"
 
@@ -88,8 +87,9 @@ class LlvmMlir < Formula
 
     llvmpath = buildpath/"llvm"
     mkdir llvmpath/"build" do
-      system "cmake", "-G", "Ninja", "..", *(std_cmake_args + args)
-      system "cmake", "--build", ".", "--target", "check-mlir"
+      system "cmake", "-G", "Unix Makefiles", "..", *(std_cmake_args + args)
+      system "make"
+      system "make", "install"
     end
   end
 
