@@ -46,15 +46,10 @@ class LlvmMlir < Formula
   # See: Homebrew/homebrew-core/issues/35513
   depends_on "cmake" => :build
 
-  uses_from_macos "llvm"
-
-  # Upstream ARM patch for OpenMP runtime, remove in next version
-  # https://reviews.llvm.org/D91002
-  # https://bugs.llvm.org/show_bug.cgi?id=47609
-  patch do
-    url "https://raw.githubusercontent.com/Homebrew/formula-patches/6166a68c/llvm/openmp_arm.patch"
-    sha256 "70fe3836b423e593688cd1cc7a3d76ee6406e64b9909f1a2f780c6f018f89b1e"
-  end
+  uses_from_macos "libedit"
+  uses_from_macos "libxml2"
+  uses_from_macos "ncurses"
+  uses_from_macos "zlib"
 
   def install
     # Apple's libstdc++ is too old to build LLVM
@@ -67,13 +62,11 @@ class LlvmMlir < Formula
     # can almost be treated as an entirely different build from llvm.
     ENV.permit_arch_flags
 
-    args = %W[
+    args = %w[
       -DLLVM_ENABLE_PROJECTS=mlir
       -DLLVM_BUILD_EXAMPLES=ON
       -DLLVM_TARGETS_TO_BUILD=all
       -DLLVM_ENABLE_ASSERTIONS=ON
-      -DCMAKE_C_COMPILER=clang
-      -DCMAKE_CXX_COMPILER=clang++
     ]
 
     sdk = MacOS.sdk_path_if_needed
