@@ -21,15 +21,16 @@ class Flang < Formula
     args = %W[
       -DLLVM_DIR=#{llvm_lib}/cmake/llvm
       -DMLIR_DIR=#{mlir_lib}/cmake/mlir
+      -DCLANG_DIR=#{llvm_lib}/cmake/clang
     ]
 
-    args << "-DCMAKE_CXX_COMPILER=#{Formula["llvm"].opt_bin}/clang++" if build.with? "llvm"
+    llvm_clang_flag = "-DCMAKE_CXX_COMPILER=#{Formula["llvm"].opt_bin}/clang++"
+    args << llvm_clang_flag if build.with? "llvm"
 
     if build.with? "flang-new"
-      args.concat %W[
-        -DFLANG_BUILD_NEW_DRIVER=ON
-        -DCLANG_DIR=#{llvm_lib}/cmake/clang
-      ]
+      # Add compiler flag for LLVM Clang unless it has already been included
+      args << llvm_clang_flag unless build.with? "llvm"
+      args << "-DFLANG_BUILD_NEW_DRIVER=ON"
     end
 
     mkdir "build" do
