@@ -12,7 +12,6 @@ class Mlir < Formula
   def install
     args = %w[
       -DLLVM_ENABLE_PROJECTS=mlir
-      -DLLVM_BUILD_EXAMPLES=ON
       -DLLVM_TARGETS_TO_BUILD=all
       -DLLVM_ENABLE_ASSERTIONS=ON
     ]
