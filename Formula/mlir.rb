@@ -27,7 +27,7 @@ class Mlir < Formula
     mkdir "build" do
       system "cmake", "-G", "Ninja", "../llvm", *(std_cmake_args + args)
       system "cmake", "--build", ".", "--target", "check-mlir"
-      system "cmake", "--install", "."
+      system "cmake", "--build", ".", "--install"
     end
   end
 
