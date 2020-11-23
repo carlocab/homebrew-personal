@@ -1,3 +1,5 @@
+require "os/linux/glibc"
+
 class LlvmMlir < Formula
   desc "Next-gen compiler infrastructure"
   homepage "https://llvm.org/"
@@ -35,17 +37,23 @@ class LlvmMlir < Formula
     regex(/LLVM (\d+.\d+.\d+)/i)
   end
 
+  bottle do
+    cellar :any
+    sha256 "a2030fcb7618c193ad81c0af98a62a2549ce9af16eab7b41b55801a643fce9d4" => :big_sur
+    sha256 "313e4f27bc61f4a7afe193288c0fb98a8c96efe89edf82990ae1b79d584196c5" => :catalina
+    sha256 "0d9e7f09db772677467075f5fe8440130cd08b3019ed73ca4afa7b2f307d962e" => :mojave
+    sha256 "d3c239a222cf92151616f98ab2ff28ec40d9eee3d395a55d23c12a374a2e0977" => :high_sierra
+    sha256 "453cc479e334dce39139362efded8497e91d7901816ad48bbe83f7f58b146426" => :x86_64_linux
+  end
+
   # Clang cannot find system headers if Xcode CLT is not installed
   pour_bottle? do
     reason "The bottle needs the Xcode CLT to be installed."
-    satisfy { MacOS::CLT.installed? }
+    satisfy { !OS.mac? || MacOS::CLT.installed? }
   end
 
   keg_only :provided_by_macos
 
-  # https://llvm.org/docs/GettingStarted.html#requirement
-  # We intentionally use Make instead of Ninja.
-  # See: Homebrew/homebrew-core/issues/35513
   depends_on "cmake" => :build
   depends_on "ninja" => :build
   depends_on "python@3.9" => :build
@@ -55,6 +63,18 @@ class LlvmMlir < Formula
   uses_from_macos "libxml2"
   uses_from_macos "ncurses"
   uses_from_macos "zlib"
+
+  unless OS.mac?
+    depends_on "pkg-config" => :build
+    depends_on "gcc" # needed for libstdc++
+    if Formula["glibc"].any_version_installed? || OS::Linux::Glibc.system_version < Formula["glibc"].version
+      depends_on "glibc"
+    end
+    depends_on "binutils" # needed for gold and strip
+    depends_on "libelf" # openmp requires <gelf.h>
+
+    conflicts_with "clang-format", because: "both install `clang-format` binaries"
+  end
 
   # Upstream ARM patch for OpenMP runtime, remove in next version
   # https://reviews.llvm.org/D91002
@@ -76,10 +96,10 @@ class LlvmMlir < Formula
     ]
     runtimes = %w[
       compiler-rt
-      libcxx
-      libcxxabi
       libunwind
+      libcxxabi
     ]
+    args << "libcxx" if OS.mac?
 
     py_ver = "3.9"
 
@@ -93,16 +113,25 @@ class LlvmMlir < Formula
     # can almost be treated as an entirely different build from llvm.
     ENV.permit_arch_flags
 
+    unless OS.mac?
+      # see https://llvm.org/docs/HowToCrossCompileBuiltinsOnArm.html#the-cmake-try-compile-stage-fails
+      # Basically, the stage1 clang will try to locate a gcc toolchain and often
+      # get the default from /usr/local, which might contains an old version of
+      # gcc that can't build compiler-rt. This fixes the problem and, unlike
+      # setting the main project's cmake option -DGCC_INSTALL_PREFIX, avoid
+      # hardcoding the gcc path into the binary
+      inreplace "compiler-rt/CMakeLists.txt", /(cmake_minimum_required.*\n)/,
+        "\\1add_compile_options(\"--gcc-toolchain=#{Formula["gcc"].opt_prefix}\")"
+    end
+
     args = %W[
       -DLLVM_ENABLE_PROJECTS=#{projects.join(";")}
       -DLLVM_ENABLE_RUNTIMES=#{runtimes.join(";")}
       -DLLVM_POLLY_LINK_INTO_TOOLS=ON
       -DLLVM_BUILD_EXTERNAL_COMPILER_RT=ON
       -DLLVM_LINK_LLVM_DYLIB=ON
-      -DLLVM_BUILD_LLVM_C_DYLIB=ON
       -DLLVM_ENABLE_EH=ON
       -DLLVM_ENABLE_FFI=ON
-      -DLLVM_ENABLE_LIBCXX=ON
       -DLLVM_ENABLE_RTTI=ON
       -DLLVM_INCLUDE_DOCS=OFF
       -DLLVM_INCLUDE_TESTS=OFF
@@ -112,7 +141,6 @@ class LlvmMlir < Formula
       -DLLVM_TARGETS_TO_BUILD=all
       -DFFI_INCLUDE_DIR=#{Formula["libffi"].opt_lib}/libffi-#{Formula["libffi"].version}/include
       -DFFI_LIBRARY_DIR=#{Formula["libffi"].opt_lib}
-      -DLLVM_CREATE_XCODE_TOOLCHAIN=#{MacOS::Xcode.installed? ? "ON" : "OFF"}
       -DLLDB_USE_SYSTEM_DEBUGSERVER=ON
       -DLLDB_ENABLE_PYTHON=OFF
       -DLLDB_ENABLE_LUA=OFF
@@ -120,11 +148,24 @@ class LlvmMlir < Formula
       -DLIBOMP_INSTALL_ALIASES=OFF
       -DCLANG_PYTHON_BINDINGS_VERSIONS=#{py_ver}
     ]
+    if OS.mac?
+      args << "-DLLVM_BUILD_LLVM_C_DYLIB=ON"
+      args << "-DLLVM_ENABLE_LIBCXX=ON"
+      args << "-DLLVM_CREATE_XCODE_TOOLCHAIN=#{MacOS::Xcode.installed? ? "ON" : "OFF"}"
+    else
+      args << "-DLLVM_BUILD_LLVM_C_DYLIB=OFF"
+      args << "-DLLVM_ENABLE_LIBCXX=OFF"
+      args << "-DLLVM_CREATE_XCODE_TOOLCHAIN=OFF"
+      args << "-DCLANG_DEFAULT_CXX_STDLIB=libstdc++"
+    end
 
     sdk = MacOS.sdk_path_if_needed
     args << "-DDEFAULT_SYSROOT=#{sdk}" if sdk
 
-    if MacOS.version == :mojave && MacOS::CLT.installed?
+    # Enable llvm gold plugin for LTO
+    args << "-DLLVM_BINUTILS_INCDIR=#{Formula["binutils"].opt_include}" unless OS.mac?
+
+    if OS.mac? & MacOS.version == :mojave && MacOS::CLT.installed?
       # Mojave CLT linker via software update is older than Xcode.
       # Use it to retain compatibility.
       args << "-DCMAKE_LINKER=/Library/Developer/CommandLineTools/usr/bin/ld"
@@ -135,7 +176,15 @@ class LlvmMlir < Formula
       system "cmake", "-G", "Ninja", "..", *(std_cmake_args + args)
       system "cmake", "--build", "."
       system "cmake", "--install", "."
-      system "make", "install-xcode-toolchain" if MacOS::Xcode.installed?
+      system "make", "install-xcode-toolchain" if OS.mac? && MacOS::Xcode.installed?
+    end
+
+    unless OS.mac?
+      # Strip executables/libraries/object files to reduce their size
+      system("strip", "--strip-unneeded", "--preserve-dates", *(Dir[bin/"**/*", lib/"**/*"]).select do |f|
+        f = Pathname.new(f)
+        f.file? && (f.elf? || f.extname == ".a")
+      end)
     end
 
     # Install LLVM Python bindings
@@ -173,7 +222,7 @@ class LlvmMlir < Formula
 
     system "#{bin}/clang", "-L#{lib}", "-fopenmp", "-nobuiltininc",
                            "-I#{lib}/clang/#{clean_version}/include",
-                           "omptest.c", "-o", "omptest"
+                           "omptest.c", "-o", "omptest", *ENV["LDFLAGS"].split
     testresult = shell_output("./omptest")
 
     sorted_testresult = testresult.split("\n").sort.join("\n")
@@ -203,16 +252,32 @@ class LlvmMlir < Formula
       }
     EOS
 
-    # Testing default toolchain and SDK location.
-    system "#{bin}/clang++", "-v",
-           "-std=c++11", "test.cpp", "-o", "test++"
-    assert_includes MachO::Tools.dylibs("test++"), "/usr/lib/libc++.1.dylib"
-    assert_equal "Hello World!", shell_output("./test++").chomp
-    system "#{bin}/clang", "-v", "test.c", "-o", "test"
-    assert_equal "Hello World!", shell_output("./test").chomp
+    unless OS.mac?
+      system "#{bin}/clang++", "-v", "test.cpp", "-o", "test"
+      assert_equal "Hello World!", shell_output("./test").chomp
+    end
 
     # Testing Command Line Tools
-    if MacOS::CLT.installed?
+    if OS.mac? && MacOS::CLT.installed?
+      libclangclt = Dir[
+        "/Library/Developer/CommandLineTools/usr/lib/clang/#{MacOS::CLT.version.to_i}*"
+      ].last { |f| File.directory? f }
+
+      system "#{bin}/clang++", "-v", "-nostdinc",
+              "-I/Library/Developer/CommandLineTools/usr/include/c++/v1",
+              "-I#{libclangclt}/include",
+              "-I/usr/include",
+              # need it because /Library/.../usr/include/c++/v1/iosfwd refers to <wchar.h>,
+              # which CLT installs to /usr/include
+              "test.cpp", "-o", "testCLT++"
+      # Testing default toolchain and SDK location.
+      system "#{bin}/clang++", "-v",
+             "-std=c++11", "test.cpp", "-o", "test++"
+      assert_includes MachO::Tools.dylibs("test++"), "/usr/lib/libc++.1.dylib"
+      assert_equal "Hello World!", shell_output("./test++").chomp
+      system "#{bin}/clang", "-v", "test.c", "-o", "test"
+      assert_equal "Hello World!", shell_output("./test").chomp
+
       toolchain_path = "/Library/Developer/CommandLineTools"
       system "#{bin}/clang++", "-v",
              "-isysroot", MacOS::CLT.sdk_path,
@@ -227,7 +292,7 @@ class LlvmMlir < Formula
     end
 
     # Testing Xcode
-    if MacOS::Xcode.installed?
+    if OS.mac? && MacOS::Xcode.installed?
       system "#{bin}/clang++", "-v",
              "-isysroot", MacOS::Xcode.sdk_path,
              "-isystem", "#{MacOS::Xcode.toolchain_path}/usr/include/c++/v1",
@@ -244,44 +309,47 @@ class LlvmMlir < Formula
 
     # link against installed libc++
     # related to https://github.com/Homebrew/legacy-homebrew/issues/47149
-    system "#{bin}/clang++", "-v",
-           "-isystem", "#{opt_include}/c++/v1",
-           "-std=c++11", "-stdlib=libc++", "test.cpp", "-o", "testlibc++",
-           "-L#{opt_lib}", "-Wl,-rpath,#{opt_lib}"
-    assert_includes MachO::Tools.dylibs("testlibc++"), "#{opt_lib}/libc++.1.dylib"
-    assert_equal "Hello World!", shell_output("./testlibc++").chomp
+    if OS.mac?
+      system "#{bin}/clang++", "-v",
+             "-isystem", "#{opt_include}/c++/v1",
+             "-std=c++11", "-stdlib=libc++", "test.cpp", "-o", "testlibc++",
+             "-L#{opt_lib}", "-Wl,-rpath,#{opt_lib}"
+      assert_includes MachO::Tools.dylibs("testlibc++"), "#{opt_lib}/libc++.1.dylib"
+      assert_equal "Hello World!", shell_output("./testlibc++").chomp
 
-    (testpath/"scanbuildtest.cpp").write <<~EOS
-      #include <iostream>
-      int main() {
-        int *i = new int;
-        *i = 1;
-        delete i;
-        std::cout << *i << std::endl;
-        return 0;
-      }
-    EOS
-    assert_includes shell_output("#{bin}/scan-build clang++ scanbuildtest.cpp 2>&1"),
-      "warning: Use of memory after it is freed"
+      (testpath/"scanbuildtest.cpp").write <<~EOS
+        #include <iostream>
+        int main() {
+          int *i = new int;
+          *i = 1;
+          delete i;
+          std::cout << *i << std::endl;
+          return 0;
+        }
+      EOS
+      assert_includes shell_output("#{bin}/scan-build clang++ scanbuildtest.cpp 2>&1"),
+        "warning: Use of memory after it is freed"
 
-    (testpath/"clangformattest.c").write <<~EOS
-      int    main() {
-          printf("Hello world!"); }
-    EOS
-    assert_equal "int main() { printf(\"Hello world!\"); }\n",
+      (testpath/"clangformattest.c").write <<~EOS
+        int    main() {
+            printf("Hello world!"); }
+      EOS
+      assert_equal "int main() { printf(\"Hello world!\"); }\n",
       shell_output("#{bin}/clang-format -style=google clangformattest.c")
+    end
 
     # Ensure LLVM did not regress output of `llvm-config --system-libs` which for a time
     # was known to output incorrect linker flags; e.g., `-llibxml2.tbd` instead of `-lxml2`.
     # On the other hand, note that a fully qualified path to `dylib` or `tbd` is OK, e.g.,
     # `/usr/local/lib/libxml2.tbd` or `/usr/local/lib/libxml2.dylib`.
+    ext = shared_library("")
     shell_output("#{bin}/llvm-config --system-libs").chomp.strip.split(" ").each do |lib|
       if lib.start_with?("-l")
         assert !lib.end_with?(".tbd"), "expected abs path when lib reported as .tbd"
-        assert !lib.end_with?(".dylib"), "expected abs path when lib reported as .dylib"
+        assert !lib.end_with?(ext), "expected abs path when lib reported as .dylib"
       else
         p = Pathname.new(lib)
-        if p.extname == ".tbd" || p.extname == ".dylib"
+        if p.extname == ".tbd" || p.extname == ext
           assert p.absolute?, "expected abs path when lib reported as .tbd or .dylib"
         end
       end
