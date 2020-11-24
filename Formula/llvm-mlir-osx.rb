@@ -135,7 +135,7 @@ class LlvmMlirOsx < Formula
       system "cmake", "-G", "Ninja", "..", *(std_cmake_args + args)
       system "cmake", "--build", "."
       system "cmake", "--install", "."
-      system "make", "install-xcode-toolchain" if MacOS::Xcode.installed?
+      system "cmake", "--build", ".", "--target", "install-xcode-toolchain" if MacOS::Xcode.installed?
     end
 
     # Install LLVM Python bindings
