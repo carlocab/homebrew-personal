@@ -5,32 +5,26 @@ class Flang < Formula
   sha256 "7447cf8af7875f39b653a4932d33ba89288a1d3aaad1f46c3da1196b092de633"
   license "Apache-2.0"
 
-  option "with-llvm", "Build with LLVM Clang"
   option "with-flang-new", "Build with experimental Flang driver"
 
   depends_on "cmake" => :build
   depends_on "ninja" => :build
   depends_on "gcc" => :test # for gfortran
-  depends_on "llvm"
-  depends_on "mlir"
+  depends_on "llvm-mlir-osx"
 
   def install
-    llvm_lib = Formula["llvm"].opt_lib
-    mlir_lib = Formula["mlir"].opt_lib
+    llvm_lib = Formula["llvm-mlir-osx"].opt_lib
 
     args = %W[
       -DLLVM_DIR=#{llvm_lib}/cmake/llvm
-      -DMLIR_DIR=#{mlir_lib}/cmake/mlir
-      -DCLANG_DIR=#{llvm_lib}/cmake/clang
+      -DMLIR_DIR=#{llvm_lib}/cmake/mlir
     ]
 
-    llvm_clang_flag = "-DCMAKE_CXX_COMPILER=#{Formula["llvm"].opt_bin}/clang++"
-    args << llvm_clang_flag if build.with? "llvm"
-
     if build.with? "flang-new"
-      # Add compiler flag for LLVM Clang unless it has already been included
-      args << llvm_clang_flag unless build.with? "llvm"
-      args << "-DFLANG_BUILD_NEW_DRIVER=ON"
+      args.concat %W[
+        -DFLANG_BUILD_NEW_DRIVER=ON
+        -DCLANG_DIR=#{llvm_lib}/cmake/clang
+      ]
     end
 
     mkdir "build" do
