@@ -203,6 +203,15 @@ class LlvmMlirOsx < Formula
       }
     EOS
 
+    # Testing mlir
+    (testpath/"test.mlir").write <<~EOS
+      func @bad_branch() {
+        br ^missing  // expected-error {{reference to an undefined block}}
+      }
+    EOS
+
+    system "#{bin}/mlir-opt", "--verify-diagnostics", "test.mlir"
+
     # Testing default toolchain and SDK location.
     system "#{bin}/clang++", "-v",
            "-std=c++11", "test.cpp", "-o", "test++"
