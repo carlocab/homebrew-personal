@@ -37,15 +37,6 @@ class LlvmMlir < Formula
     regex(/LLVM (\d+.\d+.\d+)/i)
   end
 
-  bottle do
-    cellar :any
-    sha256 "a2030fcb7618c193ad81c0af98a62a2549ce9af16eab7b41b55801a643fce9d4" => :big_sur
-    sha256 "313e4f27bc61f4a7afe193288c0fb98a8c96efe89edf82990ae1b79d584196c5" => :catalina
-    sha256 "0d9e7f09db772677467075f5fe8440130cd08b3019ed73ca4afa7b2f307d962e" => :mojave
-    sha256 "d3c239a222cf92151616f98ab2ff28ec40d9eee3d395a55d23c12a374a2e0977" => :high_sierra
-    sha256 "453cc479e334dce39139362efded8497e91d7901816ad48bbe83f7f58b146426" => :x86_64_linux
-  end
-
   # Clang cannot find system headers if Xcode CLT is not installed
   pour_bottle? do
     reason "The bottle needs the Xcode CLT to be installed."
@@ -176,7 +167,7 @@ class LlvmMlir < Formula
       system "cmake", "-G", "Ninja", "..", *(std_cmake_args + args)
       system "cmake", "--build", "."
       system "cmake", "--install", "."
-      system "make", "install-xcode-toolchain" if OS.mac? && MacOS::Xcode.installed?
+      system "cmake", "--build", ".", "--target", "install-xcode-toolchain" if OS.mac? && MacOS::Xcode.installed?
     end
 
     unless OS.mac?
