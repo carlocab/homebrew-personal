@@ -10,7 +10,14 @@ class Flang < Formula
   depends_on "cmake" => :build
   depends_on "ninja" => :build
   depends_on "gcc" => :test # for gfortran
-  depends_on "llvm-mlir-osx"
+
+  on_macos do
+    depends_on "llvm-mlir-osx"
+  end
+
+  on_linux do
+    depends_on "llvm-mlir"
+  end
 
   def install
     llvm_lib = Formula["llvm-mlir-osx"].opt_lib
