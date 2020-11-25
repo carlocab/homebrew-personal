@@ -17,13 +17,6 @@ class TmuxAT31c < Formula
     depends_on "autoconf" => :build
     depends_on "automake" => :build
     depends_on "libtool" => :build
-
-    uses_from_macos "perl" => :build
-    uses_from_macos "m4" => :build
-
-    on_linux do
-      depends_on "bison" => :build
-    end
   end
 
   keg_only :versioned_formula
