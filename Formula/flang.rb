@@ -21,6 +21,13 @@ class Flang < Formula
       -DMLIR_DIR=#{llvm_lib}/cmake/mlir
     ]
 
+    on_linux do
+      args.concat %W[
+        -DCMAKE_C_COMPILER=clang
+        -DCMAKE_CXX_COMPILER=clang++
+      ]
+    end
+
     if build.with? "flang-new"
       args.concat %W[
         -DFLANG_BUILD_NEW_DRIVER=ON
