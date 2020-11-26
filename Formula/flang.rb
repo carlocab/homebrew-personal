@@ -34,6 +34,14 @@ class Flang < Formula
     end
   end
 
+  def caveats
+    <<~EOS
+      Flang currently requires an external Fortran compiler to compile and link
+      Fortran source files. You can install one with
+        brew install gcc
+    EOS
+  end
+
   test do
     (testpath/"omptest.f90").write <<~EOS
       PROGRAM omptest
