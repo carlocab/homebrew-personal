@@ -4,6 +4,7 @@ class Flang < Formula
   url "https://github.com/llvm/llvm-project/releases/download/llvmorg-11.0.0/flang-11.0.0.src.tar.xz"
   sha256 "7447cf8af7875f39b653a4932d33ba89288a1d3aaad1f46c3da1196b092de633"
   license "Apache-2.0"
+  head "https://github.com/llvm/llvm-project.git"
 
   option "with-flang-new", "Build with experimental Flang driver"
 
@@ -26,6 +27,8 @@ class Flang < Formula
         -DCLANG_DIR=#{llvm_lib}/cmake/clang
       ]
     end
+
+    cd "flang" if build.head?
 
     mkdir "build" do
       system "cmake", "-G", "Ninja", "..", *(std_cmake_args + args)
