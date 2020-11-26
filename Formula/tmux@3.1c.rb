@@ -48,16 +48,18 @@ class TmuxAT31c < Formula
 
     # Needed for patch, remove in next version
     unless build.head?
-      files_to_fix = %W[
+      files_to_fix = %w[
         aclocal.m4
         configure
       ]
 
+      automake_version = Formula["automake"].version
+      major_version = automake_version.to_s[/\d\.\d\d/]
       files_to_fix.each do |file|
-        inreplace file, "'1.15'", "'1.16'"
+        inreplace file, "'1.15'", "'#{major_version}'"
       end
 
-      inreplace "aclocal.m4", "[1.15.1]", "[1.16.3]"
+      inreplace "aclocal.m4", "[1.15.1]", "[#{automake_version}]"
     end
 
     args = %W[
