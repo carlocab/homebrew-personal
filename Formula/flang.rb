@@ -22,7 +22,7 @@ class Flang < Formula
     ]
 
     on_linux do
-      args.concat %W[
+      args.concat %w[
         -DCMAKE_C_COMPILER=clang
         -DCMAKE_CXX_COMPILER=clang++
       ]
