@@ -1,6 +1,6 @@
 class Flang < Formula
   desc "Fortran front end for LLVM"
-  homepage "https://flang.llvm.org"
+  homepage "https://llvm.org"
   url "https://github.com/llvm/llvm-project/releases/download/llvmorg-11.0.0/flang-11.0.0.src.tar.xz"
   sha256 "7447cf8af7875f39b653a4932d33ba89288a1d3aaad1f46c3da1196b092de633"
   license "Apache-2.0"
