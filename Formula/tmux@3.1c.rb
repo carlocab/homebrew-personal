@@ -39,7 +39,7 @@ class TmuxAT31c < Formula
     sha256 "b5f7bbd78f9790026bbff16fc6e3fe4070d067f58f943e156bd1a8c3c99f6a6f"
   end
 
-  # Patch from maintainer at 
+  # Patch from maintainer at
   # https://github.com/tmux/tmux/issues/2468#issuecomment-729049845
   patch :DATA unless build.head?
 

@@ -1,4 +1,4 @@
-class Pgplot< Formula
+class Pgplot < Formula
   desc "Device-independent graphics package for making simple scientific graphs"
   homepage "https://www.astro.caltech.edu/~tjp/pgplot/"
   url "ftp://ftp.astro.caltech.edu/pub/pgplot/pgplot522.tar.gz"
