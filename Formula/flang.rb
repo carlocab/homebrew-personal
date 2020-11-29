@@ -8,9 +8,10 @@ class Flang < Formula
   head "https://github.com/llvm/llvm-project.git"
 
   bottle do
-    root_url "https://github.com/carlocab/homebrew-personal/releases/download/flang-11.0.0/flang--11.0.0.catalina.bottle.tar.gz"
+    root_url "https://github.com/carlocab/homebrew-personal/releases/download/flang-11.0.0"
     cellar :any_skip_relocation
-    sha256 "45427e7984d1deb4e3a22a6a077ffd42853317a7e47e512cf455da63ad257789" => :catalina
+    sha256 "314f369447bd7b694fc3bbceb868ef78aea7c9c416e7fc50bf53e5143d155e7b" => :big_sur
+    sha256 "1dd40c5112c76628b99960c3bb983386ac847ae9d5bf1589606c629db3d5ae85" => :catalina
   end
 
   option "with-flang-new", "Build with experimental Flang driver"
