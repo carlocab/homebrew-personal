@@ -14,11 +14,11 @@ class Flang < Formula
   depends_on "llvm"
 
   def install
-    llvm_lib = Formula["llvm"].opt_lib
+    llvm_lib = Formula["llvm"].opt_lib/"cmake"
 
     args = %W[
-      -DLLVM_DIR=#{llvm_lib}/cmake/llvm
-      -DMLIR_DIR=#{llvm_lib}/cmake/mlir
+      -DLLVM_DIR=#{llvm_lib}/llvm
+      -DMLIR_DIR=#{llvm_lib}/mlir
     ]
 
     on_linux do
@@ -31,7 +31,7 @@ class Flang < Formula
     if build.with? "flang-new"
       args.concat %W[
         -DFLANG_BUILD_NEW_DRIVER=ON
-        -DCLANG_DIR=#{llvm_lib}/cmake/clang
+        -DCLANG_DIR=#{llvm_lib}/clang
       ]
     end
 
