@@ -8,6 +8,7 @@ jobs:
     strategy:
       matrix:
         os: [ubuntu-latest, macOS-latest]
+      fail-fast: false
     runs-on: ${{ matrix.os }}
     steps:
       - name: Set up Homebrew
