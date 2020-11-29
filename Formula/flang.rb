@@ -1,6 +1,7 @@
 class Flang < Formula
   desc "Fortran front end for LLVM"
-  homepage "https://flang.llvm.org"
+  # Actual homepage https://flang.llvm.org fails brew audit
+  homepage "https://llvm.org"
   url "https://github.com/llvm/llvm-project/releases/download/llvmorg-11.0.0/flang-11.0.0.src.tar.xz"
   sha256 "7447cf8af7875f39b653a4932d33ba89288a1d3aaad1f46c3da1196b092de633"
   license "Apache-2.0"
@@ -14,11 +15,11 @@ class Flang < Formula
   depends_on "llvm"
 
   def install
-    llvm_lib = Formula["llvm"].opt_lib
+    llvm_cmake_lib = Formula["llvm"].opt_lib/"cmake"
 
     args = %W[
-      -DLLVM_DIR=#{llvm_lib}/cmake/llvm
-      -DMLIR_DIR=#{llvm_lib}/cmake/mlir
+      -DLLVM_DIR=#{llvm_cmake_lib}/llvm
+      -DMLIR_DIR=#{llvm_cmake_lib}/mlir
     ]
 
     on_linux do
@@ -31,7 +32,7 @@ class Flang < Formula
     if build.with? "flang-new"
       args.concat %W[
         -DFLANG_BUILD_NEW_DRIVER=ON
-        -DCLANG_DIR=#{llvm_lib}/cmake/clang
+        -DCLANG_DIR=#{llvm_cmake_lib}/clang
       ]
     end
 
