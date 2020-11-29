@@ -21,6 +21,8 @@ class Flang < Formula
   depends_on "gcc" => :test # for gfortran
   depends_on "llvm"
 
+  fails_with gcc: "5"
+
   def install
     llvm_cmake_lib = Formula["llvm"].opt_lib/"cmake"
 
@@ -28,13 +30,6 @@ class Flang < Formula
       -DLLVM_DIR=#{llvm_cmake_lib}/llvm
       -DMLIR_DIR=#{llvm_cmake_lib}/mlir
     ]
-
-    on_linux do
-      args.concat %w[
-        -DCMAKE_C_COMPILER=clang
-        -DCMAKE_CXX_COMPILER=clang++
-      ]
-    end
 
     if build.with? "flang-new"
       args.concat %W[
