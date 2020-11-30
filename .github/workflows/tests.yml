@@ -7,7 +7,7 @@ jobs:
   test-bot:
     strategy:
       matrix:
-        os: [ubuntu-latest, macOS-latest]
+        os: [macos-11.0, macOS-latest]
       fail-fast: false
     runs-on: ${{ matrix.os }}
     steps:
