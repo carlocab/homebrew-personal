@@ -7,17 +7,9 @@ class Flang < Formula
   license "Apache-2.0"
   head "https://github.com/llvm/llvm-project.git"
 
-  bottle do
-    root_url "https://github.com/carlocab/homebrew-personal/releases/download/flang-11.0.0"
-    cellar :any_skip_relocation
-    sha256 "314f369447bd7b694fc3bbceb868ef78aea7c9c416e7fc50bf53e5143d155e7b" => :big_sur
-    sha256 "1dd40c5112c76628b99960c3bb983386ac847ae9d5bf1589606c629db3d5ae85" => :catalina
-  end
-
   option "with-flang-new", "Build with experimental Flang driver"
 
   depends_on "cmake" => :build
-  depends_on "ninja" => :build
   depends_on "gcc" => :test # for gfortran
   depends_on "llvm"
 
@@ -46,7 +38,7 @@ class Flang < Formula
     cd "flang" if build.head?
 
     mkdir "build" do
-      system "cmake", "-G", "Ninja", "..", *(std_cmake_args + args)
+      system "cmake", "-G", "Unix Makefiles", "..", *(std_cmake_args + args)
       system "cmake", "--build", "."
       system "cmake", "--install", "."
     end
