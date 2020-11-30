@@ -9,8 +9,7 @@ class Flang < Formula
 
   bottle do
     root_url "https://github.com/carlocab/homebrew-personal/releases/download/flang-11.0.0"
-    cellar :any_skip_relocation
-    sha256 "1dd40c5112c76628b99960c3bb983386ac847ae9d5bf1589606c629db3d5ae85" => :catalina
+    sha256 "4c931024038308a484621d9b35ecdec9afe87c4fda82197893bcdcefb39f03db" => :catalina
   end
 
   option "with-flang-new", "Build with experimental Flang driver"
