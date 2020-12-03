@@ -31,9 +31,6 @@ class TmuxAT31c < Formula
   # https://github.com/tmux/tmux/issues/2223
   depends_on "utf8proc" if MacOS.version >= :high_sierra
 
-  uses_from_macos "m4"
-  uses_from_macos "perl"
-
   resource "completion" do
     url "https://raw.githubusercontent.com/imomaliev/tmux-bash-completion/f5d53239f7658f8e8fbaf02535cc369009c436d6/completions/tmux"
     sha256 "b5f7bbd78f9790026bbff16fc6e3fe4070d067f58f943e156bd1a8c3c99f6a6f"
