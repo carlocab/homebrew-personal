@@ -11,6 +11,13 @@ class TmuxAT31c < Formula
     regex(%r{href=.*?/tag/v?(\d+(?:\.\d+)+[a-z]?)["' >]}i)
   end
 
+  bottle do
+    root_url "https://github.com/carlocab/homebrew-personal/releases/download/tmux@3.1c-3.1c_1"
+    cellar :any
+    sha256 "5bc78332862111f2ba07a0dca012528ee0598cb4f88c220c1da9d7699232446a" => :big_sur
+    sha256 "42a67fb1165ddb21ae673c048cf7f4e45681cab018b76df59b943305b8aac610" => :catalina
+  end
+
   head do
     url "https://github.com/tmux/tmux.git"
 
