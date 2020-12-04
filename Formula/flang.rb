@@ -7,6 +7,12 @@ class Flang < Formula
   license "Apache-2.0"
   head "https://github.com/llvm/llvm-project.git"
 
+  bottle do
+    root_url "https://github.com/carlocab/homebrew-personal/releases/download/flang-11.0.0"
+    sha256 "fe8342f7d1b1eb88f6e690f59373a0bcc7f1a415299010c5a23ffc6bd14e7550" => :big_sur
+    sha256 "3956cb51802adc470a1d88db02920d075aa3288f583abf972c99a902a1095212" => :catalina
+  end
+
   option "with-flang-new", "Build with experimental Flang driver"
 
   depends_on "cmake" => :build
