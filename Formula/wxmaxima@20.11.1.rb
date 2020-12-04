@@ -6,6 +6,12 @@ class WxmaximaAT20111 < Formula
   license "GPL-2.0-or-later"
   head "https://github.com/wxMaxima-developers/wxmaxima.git"
 
+  bottle do
+    root_url "https://github.com/carlocab/homebrew-personal/releases/download/wxmaxima@20.11.1-20.11.1"
+    sha256 "1af31860ece6571fcac1bd7debf30a7b3d5bac8baf6f980758a8e07f14acacd4" => :big_sur
+    sha256 "097facb5aa79bc31862675dd1e29a92e49f2a0bf1e3723caf89db90abb6b93f2" => :catalina
+  end
+
   depends_on "cmake" => :build
   depends_on "gettext" => :build
   depends_on "ninja" => :build
