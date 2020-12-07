@@ -6,6 +6,12 @@ class WxmaximaAT20090 < Formula
   license "GPL-2.0-or-later"
   head "https://github.com/wxMaxima-developers/wxmaxima.git"
 
+  bottle do
+    root_url "https://github.com/carlocab/homebrew-personal/releases/download/wxmaxima@20.09.0-20.09.0"
+    sha256 "74b3d908ce177f98a790ab5b3564fa65bc267dd0ffddf984d58fae2460d60ca4" => :big_sur
+    sha256 "fbb4dfa279313f95e196c10e6d9c82895d4d3b52d6c6030c00d6d3ff26922b23" => :catalina
+  end
+
   keg_only :versioned_formula
 
   depends_on "cmake" => :build
