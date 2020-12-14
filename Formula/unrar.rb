@@ -37,8 +37,9 @@ class Unrar < Formula
 
   def caveats
     <<~EOS
-      The license has been installed at #{opt_prefix}/license.txt. Please ensure that you
-      agree with the terms of the license before using this software.
+      We agreed to the UnRAR license for you:
+        #{opt_prefix}/license.txt
+      If this is unacceptable you should uninstall the formula.
     EOS
   end
 
