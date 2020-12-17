@@ -17,6 +17,12 @@ class AgdaAT26 < Formula
     url :stable
   end
 
+  bottle do
+    root_url "https://github.com/carlocab/homebrew-personal/releases/download/agda@2.6-2.6.1.2"
+    sha256 "c3595ff8cb9a9da3494733b3b865fd260856774293f5a9bd4c97c030409b138c" => :big_sur
+    sha256 "3aa9cd92767461e03a2e48d9bdf0496f8fbdac2e9309f83ac16fa683eb4a8d45" => :catalina
+  end
+
   head do
     url "https://github.com/agda/agda.git"
 
