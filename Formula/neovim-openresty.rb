@@ -5,6 +5,12 @@ class NeovimOpenresty < Formula
   sha256 "2f76aac59363677f37592e853ab2c06151cca8830d4b3fe4675b4a52d41fc42c"
   license "Apache-2.0"
 
+  bottle do
+    root_url "https://github.com/carlocab/homebrew-personal/releases/download/neovim-openresty-0.4.4"
+    sha256 "0b0a92a37932c7422a22c2a07d987356a87f99b0c0649964d2a0c89f78b9fb94" => :big_sur
+    sha256 "1de6a8589fa8986bbec0d50442f87762b134ee72e36a419ef6dce7efaa855273" => :catalina
+  end
+
   head do
     url "https://github.com/neovim/neovim.git"
     depends_on "tree-sitter"
