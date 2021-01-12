@@ -6,6 +6,13 @@ class Luajit2 < Formula
   license "MIT"
   head "https://github.com/openresty/luajit2.git", branch: "v2.1-agentzh"
 
+  bottle do
+    root_url "https://github.com/carlocab/homebrew-personal/releases/download/luajit2-20201229"
+    cellar :any
+    sha256 "daf4ef72a13787b80354e4ddc383f9c7c2ec8d849dca671452940e9863b193a9" => :big_sur
+    sha256 "7a9c715f73a0bb709134462b128eb65d17d24f8809ce42d14d55fee57c175952" => :catalina
+  end
+
   keg_only "it is shadowed by the luajit formula"
 
   def install
