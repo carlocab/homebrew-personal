@@ -6,9 +6,7 @@ on:
 jobs:
   pr-pull:
     if: contains(github.event.pull_request.labels.*.name, 'pr-pull')
-    runs-on: ubuntu-latest
-    env:
-      HOMEBREW_FORCE_HOMEBREW_ON_LINUX: 1
+    runs-on: macos-latest
     steps:
       - name: Set up Homebrew
         uses: Homebrew/actions/setup-homebrew@master
