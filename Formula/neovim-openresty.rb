@@ -7,9 +7,9 @@ class NeovimOpenresty < Formula
   revision 1
 
   bottle do
-    root_url "https://github.com/carlocab/homebrew-personal/releases/download/neovim-openresty-0.4.4"
-    sha256 "0b0a92a37932c7422a22c2a07d987356a87f99b0c0649964d2a0c89f78b9fb94" => :big_sur
-    sha256 "1de6a8589fa8986bbec0d50442f87762b134ee72e36a419ef6dce7efaa855273" => :catalina
+    root_url "https://github.com/carlocab/homebrew-personal/releases/download/neovim-openresty-0.4.4_1"
+    sha256 "bdc8313d4bb53339ff31662382819053ac747005be6352a5a796ca2a01d45400" => :big_sur
+    sha256 "0bfadcbdca6eaab7399f48a2d74cc94e17e6d455b49f62c460d881c2f6fbcbc2" => :catalina
   end
 
   head do
