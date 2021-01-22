@@ -12,10 +12,10 @@ class DenoAT17 < Formula
     sha256 "15ed88440d37e780772183af9cc05fb0fc9d82b710315b6722f4596db4cb07f0" => :catalina
   end
 
+  depends_on "llvm" => :build
   depends_on "ninja" => :build
   depends_on "rust" => :build
   depends_on xcode: ["10.0", :build] # required by v8 7.9+
-  depends_on "llvm"
   depends_on :macos # Due to Python 2 (see https://github.com/denoland/deno/issues/2893)
 
   uses_from_macos "xz"
@@ -31,10 +31,8 @@ class DenoAT17 < Formula
     ENV["NINJA"] = Formula["ninja"].opt_bin/"ninja"
     # build rusty_v8 from source
     ENV["V8_FROM_SOURCE"] = "1"
-    # build with llvm and link against system libc++ (no runtime dep)
+    # build with llvm (no runtime dep)
     ENV["CLANG_BASE_PATH"] = Formula["llvm"].prefix
-
-    ENV["RUST_BACKTRACE"] = "full"
 
     resource("gn").stage buildpath/"gn"
     cd "gn" do
