@@ -5,6 +5,13 @@ class DenoAT17 < Formula
   sha256 "f215103d0bea381495008a8f9e90c467248a2a14d3357c6d105c084186423072"
   license "MIT"
 
+  bottle do
+    root_url "https://github.com/carlocab/homebrew-personal/releases/download/deno@1.7-1.7.0"
+    cellar :any_skip_relocation
+    sha256 "0e6bce621dbd12171220d29c2928eb4e8188a57e873d8e3ec896b3c42155c9da" => :big_sur
+    sha256 "15ed88440d37e780772183af9cc05fb0fc9d82b710315b6722f4596db4cb07f0" => :catalina
+  end
+
   depends_on "ninja" => :build
   depends_on "rust" => :build
   depends_on xcode: ["10.0", :build] # required by v8 7.9+
