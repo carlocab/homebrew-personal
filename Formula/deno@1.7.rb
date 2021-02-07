@@ -7,9 +7,8 @@ class DenoAT17 < Formula
 
   bottle do
     root_url "https://github.com/carlocab/homebrew-personal/releases/download/deno@1.7-1.7.0"
-    cellar :any_skip_relocation
-    sha256 "2b4ee9eb72c6ca1d12ad47cc5aa5d12b9585c41cf5d8a6561cddad2133510adc" => :big_sur
-    sha256 "d5bc72b230348c5b2839bdf99fd2977f2007747f10fa4c684f54229c6e60f9df" => :catalina
+    sha256 cellar: :any_skip_relocation, big_sur:  "2b4ee9eb72c6ca1d12ad47cc5aa5d12b9585c41cf5d8a6561cddad2133510adc"
+    sha256 cellar: :any_skip_relocation, catalina: "d5bc72b230348c5b2839bdf99fd2977f2007747f10fa4c684f54229c6e60f9df"
   end
 
   depends_on "llvm" => :build

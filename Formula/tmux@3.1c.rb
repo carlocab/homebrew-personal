@@ -12,9 +12,8 @@ class TmuxAT31c < Formula
 
   bottle do
     root_url "https://github.com/carlocab/homebrew-personal/releases/download/tmux@3.1c-3.1c"
-    cellar :any
-    sha256 "f044c2eeffef153da9a466d37976de7fd77ddd0e31edc0d8ac7c7e032d4fe73e" => :big_sur
-    sha256 "a92e372a534865a4dd1dc240f75114c6443a9cefdc6a44deca4545a984f84f20" => :catalina
+    sha256 cellar: :any, big_sur:  "f044c2eeffef153da9a466d37976de7fd77ddd0e31edc0d8ac7c7e032d4fe73e"
+    sha256 cellar: :any, catalina: "a92e372a534865a4dd1dc240f75114c6443a9cefdc6a44deca4545a984f84f20"
   end
 
   head do

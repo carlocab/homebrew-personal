@@ -8,7 +8,7 @@ class Flang < Formula
 
   bottle do
     root_url "https://github.com/carlocab/homebrew-personal/releases/download/flang-11.0.1"
-    sha256 big_sur: "0c21c645ecd14691b276d0bda61ecb6c90e13b05729f9a9d580985b05f3fea32"
+    sha256 big_sur:  "0c21c645ecd14691b276d0bda61ecb6c90e13b05729f9a9d580985b05f3fea32"
     sha256 catalina: "ad04b7da6577a0a612df8286dba6dbe8b750a899e15d8ee4a9d6df6e12e6a1c4"
   end
 
