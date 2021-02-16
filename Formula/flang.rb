@@ -4,6 +4,7 @@ class Flang < Formula
   url "https://github.com/llvm/llvm-project/releases/download/llvmorg-12.0.0/flang-12.0.0.src.tar.xz"
   sha256 "dc9420c9f55c6dde633f0f46fe3f682995069cc5247dfdef225cbdfdca79123a"
   license "Apache-2.0"
+  revision 1
   head "https://github.com/llvm/llvm-project.git"
 
   bottle do
@@ -18,30 +19,27 @@ class Flang < Formula
   depends_on "gcc" => :test # for gfortran
   depends_on "llvm"
 
+  uses_from_macos "zlib"
+
+  fails_with gcc: "5"
+
   def install
     llvm_cmake_lib = Formula["llvm"].opt_lib/"cmake"
-
     args = %W[
       -DLLVM_DIR=#{llvm_cmake_lib}/llvm
       -DMLIR_DIR=#{llvm_cmake_lib}/mlir
+      -DLLVM_ENABLE_ZLIB=ON
+      -DFLANG_INCLUDE_TESTS=OFF
     ]
 
-    on_linux do
-      args.concat %w[
-        -DCMAKE_C_COMPILER=clang
-        -DCMAKE_CXX_COMPILER=clang++
-      ]
-    end
-
     if build.with? "flang-new"
-      args.concat %W[
+      args += %W[
         -DFLANG_BUILD_NEW_DRIVER=ON
         -DCLANG_DIR=#{llvm_cmake_lib}/clang
       ]
     end
 
     cd "flang" if build.head?
-
     mkdir "build" do
       system "cmake", "-G", "Unix Makefiles", "..", *(std_cmake_args + args)
       system "cmake", "--build", "."
