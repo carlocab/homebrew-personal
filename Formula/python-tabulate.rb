@@ -7,6 +7,13 @@ class PythonTabulate < Formula
   sha256 "eb1d13f25760052e8931f2ef80aaf6045a6cceb47514db8beab24cded16f13a7"
   license "MIT"
 
+  bottle do
+    root_url "https://github.com/carlocab/homebrew-personal/releases/download/python-tabulate-0.8.9"
+    sha256 cellar: :any_skip_relocation, big_sur:      "726ce572d40b5bea689a8a4ac83194208bf09c63cb61bf9f0757d0c7836dea12"
+    sha256 cellar: :any_skip_relocation, catalina:     "8175b2b1297ec026e580c30b13e77d32a57c0f875c8bbc1888086d9662a01338"
+    sha256 cellar: :any_skip_relocation, x86_64_linux: "74eafe9fb9ca57a9b25b86148b1d64325322075a12e9ef641a3b045a7174119d"
+  end
+
   depends_on "python@3.9"
 
   def install
