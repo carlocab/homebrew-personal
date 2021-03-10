@@ -6,6 +6,12 @@ class Klee < Formula
   license "NCSA"
   head "https://github.com/klee/klee.git"
 
+  bottle do
+    root_url "https://github.com/carlocab/homebrew-personal/releases/download/klee-2.2"
+    sha256 big_sur:  "f699e804501c5137beb02fb192521d25f625201182cec5f700cacd3f3aac7cbc"
+    sha256 catalina: "985cc2fedcd41af39c1dfedd899b92824b721da7082679ce04c8c58979806277"
+  end
+
   depends_on "cmake" => :build
   depends_on "gperftools"
   depends_on "llvm"
