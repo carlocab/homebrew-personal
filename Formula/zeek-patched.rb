@@ -7,6 +7,12 @@ class ZeekPatched < Formula
   license "BSD-3-Clause"
   head "https://github.com/zeek/zeek.git"
 
+  bottle do
+    root_url "https://github.com/carlocab/homebrew-personal/releases/download/zeek-patched-4.0.0"
+    sha256 big_sur:  "5467d4cff1cb5a502e31e8cee18d7436b1efa7a4260246ac8bef7daa50a72b8c"
+    sha256 catalina: "04a26480a58975a47581c3a9fdf83ca7865113dea75c67c0fd9eb0af8070cddd"
+  end
+
   depends_on "bison" => :build
   depends_on "cmake" => :build
   depends_on "swig" => :build
