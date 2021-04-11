@@ -7,6 +7,12 @@ class ZeekLibcxx < Formula
   license "BSD-3-Clause"
   head "https://github.com/zeek/zeek.git"
 
+  bottle do
+    root_url "https://github.com/carlocab/homebrew-personal/releases/download/zeek-libcxx-4.0.0"
+    sha256 big_sur:  "a5547a1e0e7fabef6164bd61bc79077668c9a6ea5b63b087aa1b544691e08bf0"
+    sha256 catalina: "c6f9ce926457da02fe8de32d95a2a7b4f858fca32131e29c05b14de5e19684c2"
+  end
+
   depends_on "bison" => :build
   depends_on "cmake" => :build
   depends_on "swig" => :build
