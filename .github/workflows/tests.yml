@@ -40,8 +40,8 @@ jobs:
         if: always() && github.event_name == 'pull_request'
         uses: actions/upload-artifact@main
         with:
-          name: bottles-${{ matrix.version }}
-          path: bottles/failed
+          name: bottles-${{ matrix.os }}
+          path: 'failed/*.bottle.*'
 
       - name: Upload bottles as artifact
         if: always() && github.event_name == 'pull_request'
