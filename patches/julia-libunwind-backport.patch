@@ -1,0 +1,256 @@
+From b5abd9f27509af2ed27c3d4340d5edd0c360e25e Mon Sep 17 00:00:00 2001
+From: Carlo Cabrera <30379873+carlocab@users.noreply.github.com>
+Date: Fri, 30 Apr 2021 20:54:32 +0100
+Subject: [PATCH] Backport LLVM libunwind support
+
+This is a backport of https://github.com/JuliaLang/julia/pull/39127.
+---
+ Make.inc                                      |  4 ++--
+ Makefile                                      |  4 ----
+ src/julia_internal.h                          |  2 +-
+ src/signals-mach.c                            | 10 ++++-----
+ src/stackwalk.c                               |  2 +-
+ .../Project.toml                              |  6 ++---
+ .../src/LLVMLibUnwind_jll.jl}                 | 22 +++++++++----------
+ stdlib/LLVMLibUnwind_jll/test/runtests.jl     | 15 +++++++++++++
+ stdlib/LibOSXUnwind_jll/test/runtests.jl      |  9 --------
+ stdlib/Makefile                               |  2 +-
+ 10 files changed, 39 insertions(+), 37 deletions(-)
+ rename stdlib/{LibOSXUnwind_jll => LLVMLibUnwind_jll}/Project.toml (58%)
+ rename stdlib/{LibOSXUnwind_jll/src/LibOSXUnwind_jll.jl => LLVMLibUnwind_jll/src/LLVMLibUnwind_jll.jl} (65%)
+ create mode 100644 stdlib/LLVMLibUnwind_jll/test/runtests.jl
+ delete mode 100644 stdlib/LibOSXUnwind_jll/test/runtests.jl
+
+diff --git a/Make.inc b/Make.inc
+index 438ab7fa02..a34eb999a5 100644
+--- a/Make.inc
++++ b/Make.inc
+@@ -1031,8 +1031,8 @@ JCPPFLAGS+=-DSYSTEM_LIBUNWIND
+ endif
+ else
+ ifeq ($(OS),Darwin)
+-LIBUNWIND:=-losxunwind
+-JCPPFLAGS+=-DLIBOSXUNWIND
++LIBUNWIND:=-lunwind
++JCPPFLAGS+=-DLLVMLIBUNWIND
+ else
+ LIBUNWIND:=-lunwind
+ endif
+diff --git a/Makefile b/Makefile
+index 2fb9be55f9..ece5c363f9 100644
+--- a/Makefile
++++ b/Makefile
+@@ -187,11 +187,7 @@ endif
+ ifeq ($(USE_LLVM_SHLIB),1)
+ JL_PRIVATE_LIBS-$(USE_SYSTEM_LLVM) += libLLVM libLLVM-11jl
+ endif
+-ifeq ($(OS),Darwin)
+-JL_PRIVATE_LIBS-$(USE_SYSTEM_LIBUNWIND) += libosxunwind
+-else
+ JL_PRIVATE_LIBS-$(USE_SYSTEM_LIBUNWIND) += libunwind
+-endif
+ 
+ ifeq ($(USE_SYSTEM_LIBM),0)
+ JL_PRIVATE_LIBS-$(USE_SYSTEM_OPENLIBM) += libopenlibm
+diff --git a/src/julia_internal.h b/src/julia_internal.h
+index 172492f540..c48c6b2cfd 100644
+--- a/src/julia_internal.h
++++ b/src/julia_internal.h
+@@ -900,7 +900,7 @@ size_t rec_backtrace(jl_bt_element_t *bt_data, size_t maxsize, int skip) JL_NOTS
+ // which was asynchronously interrupted.
+ size_t rec_backtrace_ctx(jl_bt_element_t *bt_data, size_t maxsize, bt_context_t *ctx,
+                          jl_gcframe_t *pgcstack) JL_NOTSAFEPOINT;
+-#ifdef LIBOSXUNWIND
++#ifdef LLVMLIBUNWIND
+ size_t rec_backtrace_ctx_dwarf(jl_bt_element_t *bt_data, size_t maxsize, bt_context_t *ctx, jl_gcframe_t *pgcstack) JL_NOTSAFEPOINT;
+ #endif
+ JL_DLLEXPORT jl_value_t *jl_get_backtrace(void);
+diff --git a/src/signals-mach.c b/src/signals-mach.c
+index 3737bab100..1331de5e74 100644
+--- a/src/signals-mach.c
++++ b/src/signals-mach.c
+@@ -127,7 +127,7 @@ static void allocate_segv_handler()
+     }
+ }
+ 
+-#ifdef LIBOSXUNWIND
++#ifdef LLVMLIBUNWIND
+ volatile mach_port_t mach_profiler_thread = 0;
+ static kern_return_t profiler_segv_handler
+                 (mach_port_t                          exception_port,
+@@ -212,7 +212,7 @@ kern_return_t catch_exception_raise(mach_port_t            exception_port,
+     unsigned int exc_count = HOST_EXCEPTION_STATE_COUNT;
+     host_exception_state_t exc_state;
+     host_thread_state_t state;
+-#ifdef LIBOSXUNWIND
++#ifdef LLVMLIBUNWIND
+     if (thread == mach_profiler_thread) {
+         return profiler_segv_handler(exception_port, thread, task, exception, code, code_count);
+     }
+@@ -413,7 +413,7 @@ static pthread_t profiler_thread;
+ clock_serv_t clk;
+ static mach_port_t profile_port = 0;
+ 
+-#ifdef LIBOSXUNWIND
++#ifdef LLVMLIBUNWIND
+ volatile static int forceDwarf = -2;
+ static unw_context_t profiler_uc;
+ 
+@@ -477,7 +477,7 @@ void *mach_profile_listener(void *arg)
+     int i;
+     const int max_size = 512;
+     attach_exception_port(mach_thread_self(), 1);
+-#ifdef LIBOSXUNWIND
++#ifdef LLVMLIBUNWIND
+     mach_profiler_thread = mach_thread_self();
+ #endif
+     mig_reply_error_t *bufRequest = (mig_reply_error_t*)malloc_s(max_size);
+@@ -501,7 +501,7 @@ void *mach_profile_listener(void *arg)
+             unw_context_t *uc;
+             jl_thread_suspend_and_get_state(i, &uc);
+             if (running) {
+-#ifdef LIBOSXUNWIND
++#ifdef LLVMLIBUNWIND
+                 /*
+                  *  Unfortunately compact unwind info is incorrectly generated for quite a number of
+                  *  libraries by quite a large number of compilers. We can fall back to DWARF unwind info
+diff --git a/src/stackwalk.c b/src/stackwalk.c
+index 9150d48b29..71462c0da5 100644
+--- a/src/stackwalk.c
++++ b/src/stackwalk.c
+@@ -544,7 +544,7 @@ static int jl_unw_step(bt_cursor_t *cursor, int from_signal_handler, uintptr_t *
+     return unw_step(cursor) > 0;
+ }
+ 
+-#ifdef LIBOSXUNWIND
++#ifdef LLVMLIBUNWIND
+ NOINLINE size_t rec_backtrace_ctx_dwarf(jl_bt_element_t *bt_data, size_t maxsize,
+                                         bt_context_t *context, jl_gcframe_t *pgcstack)
+ {
+diff --git a/stdlib/LibOSXUnwind_jll/Project.toml b/stdlib/LLVMLibUnwind_jll/Project.toml
+similarity index 58%
+rename from stdlib/LibOSXUnwind_jll/Project.toml
+rename to stdlib/LLVMLibUnwind_jll/Project.toml
+index 653f4b7dd6..27f22465d1 100644
+--- a/stdlib/LibOSXUnwind_jll/Project.toml
++++ b/stdlib/LLVMLibUnwind_jll/Project.toml
+@@ -1,6 +1,6 @@
+-name = "LibOSXUnwind_jll"
+-uuid = "a83860b7-747b-57cf-bf1f-3e79990d037f"
+-version = "0.0.6+1"
++name = "LLVMLibUnwind_jll"
++uuid = "47c5dbc3-30ba-59ef-96a6-123e260183d9"
++version = "11.0.1+1"
+ 
+ [deps]
+ Libdl = "8f399da3-3557-5675-b5ff-fb832c97cbdb"
+diff --git a/stdlib/LibOSXUnwind_jll/src/LibOSXUnwind_jll.jl b/stdlib/LLVMLibUnwind_jll/src/LLVMLibUnwind_jll.jl
+similarity index 65%
+rename from stdlib/LibOSXUnwind_jll/src/LibOSXUnwind_jll.jl
+rename to stdlib/LLVMLibUnwind_jll/src/LLVMLibUnwind_jll.jl
+index b063a76f21..4cd6adcfcb 100644
+--- a/stdlib/LibOSXUnwind_jll/src/LibOSXUnwind_jll.jl
++++ b/stdlib/LLVMLibUnwind_jll/src/LLVMLibUnwind_jll.jl
+@@ -1,32 +1,32 @@
+ # This file is a part of Julia. License is MIT: https://julialang.org/license
+ 
+-## dummy stub for https://github.com/JuliaBinaryWrappers/LibOSXUnwind_jll.jl
++## dummy stub for https://github.com/JuliaBinaryWrappers/LLVMLibUnwind_jll.jl
+ 
+-baremodule LibOSXUnwind_jll
++baremodule LLVMLibUnwind_jll
+ using Base, Libdl
+ Base.Experimental.@compiler_options compile=min optimize=0 infer=false
+ 
+ const PATH_list = String[]
+ const LIBPATH_list = String[]
+ 
+-export libosxunwind
++export llvmlibunwind
+ 
+ # These get calculated in __init__()
+ PATH = Ref("")
+ LIBPATH = Ref("")
+ artifact_dir = ""
+-libosxunwind_handle = C_NULL
+-libosxunwind_path = ""
++llvmlibunwind_handle = C_NULL
++llvmlibunwind_path = ""
+ 
+-const libosxunwind = "@rpath/libosxunwind.dylib"
++const llvmlibunwind = "libunwind"
+ 
+ function __init__()
+     # We only dlopen something on MacOS
+     @static if Sys.isapple()
+-        global libosxunwind_handle = dlopen(libosxunwind)
+-        global libosxunwind_path = dlpath(libosxunwind_handle)
++        global llvmlibunwind_handle = dlopen(llvmlibunwind)
++        global llvmlibunwind_path = dlpath(llvmlibunwind_handle)
+         global artifact_dir = dirname(Sys.BINDIR)
+-        global LIBPATH[] = dirname(libosxunwind_path)
++        global LIBPATH[] = dirname(llvmlibunwind_path)
+         push!(LIBPATH_list, LIBPATH[])
+     end
+ end
+@@ -38,6 +38,6 @@ is_available() = @static Sys.isapple() ? true : false
+ find_artifact_dir() = artifact_dir
+ dev_jll() = error("stdlib JLLs cannot be dev'ed")
+ best_wrapper = nothing
+-get_libosxunwind_path() = libosxunwind_path
++get_llvmlibunwind_path() = llvmlibunwind_path
+ 
+-end  # module LibOSXUnwind_jll
++end  # module LLVMLibUnwind_jll
+diff --git a/stdlib/LLVMLibUnwind_jll/test/runtests.jl b/stdlib/LLVMLibUnwind_jll/test/runtests.jl
+new file mode 100644
+index 0000000000..6276322b4b
+--- /dev/null
++++ b/stdlib/LLVMLibUnwind_jll/test/runtests.jl
+@@ -0,0 +1,15 @@
++# This file is a part of Julia. License is MIT: https://julialang.org/license
++
++using Test, Libdl
++using LLVMLibUnwind_jll: llvmlibunwind_handle
++
++@testset "LLVMLibUnwind_jll" begin
++    if Sys.isapple()
++        @test dlsym(llvmlibunwind_handle, :unw_getcontext; throw_error=false) !== nothing
++        @test dlsym(llvmlibunwind_handle, :unw_init_local; throw_error=false) !== nothing
++        @test dlsym(llvmlibunwind_handle, :unw_step; throw_error=false) !== nothing
++        @test dlsym(llvmlibunwind_handle, :unw_get_reg; throw_error=false) !== nothing
++        @test dlsym(llvmlibunwind_handle, :unw_set_reg; throw_error=false) !== nothing
++        @test dlsym(llvmlibunwind_handle, :unw_resume; throw_error=false) !== nothing
++    end
++end
+diff --git a/stdlib/LibOSXUnwind_jll/test/runtests.jl b/stdlib/LibOSXUnwind_jll/test/runtests.jl
+deleted file mode 100644
+index b67b827b0d..0000000000
+--- a/stdlib/LibOSXUnwind_jll/test/runtests.jl
++++ /dev/null
+@@ -1,9 +0,0 @@
+-# This file is a part of Julia. License is MIT: https://julialang.org/license
+-
+-using Test, Libdl, LibOSXUnwind_jll
+-
+-@testset "LibOSXUnwind_jll" begin
+-    @static if Sys.isapple()
+-        @test dlsym(LibOSXUnwind_jll.libosxunwind_handle, :_Unwind_Backtrace; throw_error=false) !== nothing
+-    end
+-end
+diff --git a/stdlib/Makefile b/stdlib/Makefile
+index 490d67a13e..aae674101f 100644
+--- a/stdlib/Makefile
++++ b/stdlib/Makefile
+@@ -16,7 +16,7 @@ $(build_datarootdir)/julia/stdlib/$(VERSDIR):
+ 	mkdir -p $@
+ 
+ JLLS = DSFMT GMP CURL LIBGIT2 LLVM LIBSSH2 LIBUV MBEDTLS MPFR NGHTTP2 \
+-       OPENBLAS OPENLIBM P7ZIP PCRE SUITESPARSE ZLIB OSXUNWIND CSL \
++       OPENBLAS OPENLIBM P7ZIP PCRE SUITESPARSE ZLIB LLVMUNWIND CSL \
+        UNWIND
+ 
+ # Initialize this with JLLs that aren't in deps/Versions.make
+-- 
+2.31.1
+
