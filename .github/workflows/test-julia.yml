@@ -1,4 +1,4 @@
-name: brew test-bot
+name: Test Julia
 on: workflow_dispatch
 jobs:
   test-julia:
