@@ -91,9 +91,6 @@ class Julia < Formula
       s.change_make_var! "LOCALBASE", HOMEBREW_PREFIX
     end
 
-    # The Makefile tries to create this symlink but the way it does so is broken.
-    (buildpath/"usr/lib/julia").install_symlink Formula["llvm"].opt_lib/shared_library("libLLVM")
-
     ENV.deparallelize
     system "make", *args, "install"
 
@@ -117,16 +114,35 @@ class Julia < Formula
 end
 
 __END__
+diff --git a/base/Makefile b/base/Makefile
+index 5c6540331a..eb05ee5caa 100644
+--- a/base/Makefile
++++ b/base/Makefile
+@@ -232,7 +232,11 @@ endif # WINNT
+
+ symlink_libLLVM: $(build_private_libdir)/libLLVM.$(SHLIB_EXT)
+ ifneq ($(USE_SYSTEM_LLVM),0)
++ifeq ($(OS), Darwin)
++LLVM_CONFIG_HOST_LIBS := $(shell $(LLVM_CONFIG_HOST) --libdir)/libLLVM.$(SHLIB_EXT)
++else
+ LLVM_CONFIG_HOST_LIBS := $(shell $(LLVM_CONFIG_HOST) --libfiles)
++endif
+ # HACK: llvm-config doesn't correctly point to shared libs on all platforms
+ #       https://github.com/JuliaLang/julia/issues/29981
+ else
 diff --git a/src/Makefile b/src/Makefile
-index 0de23588bc..37838088c5 100644
+index 89aa3fc44f..bd24bd51cc 100644
 --- a/src/Makefile
 +++ b/src/Makefile
-@@ -100,7 +100,7 @@ LLVM_CXXFLAGS := $(shell $(LLVM_CONFIG_HOST) --cxxflags)
+@@ -100,7 +100,11 @@ LLVM_CXXFLAGS := $(shell $(LLVM_CONFIG_HOST) --cxxflags)
 
  ifeq ($(JULIACODEGEN),LLVM)
  ifneq ($(USE_SYSTEM_LLVM),0)
--LLVMLINK += $(LLVM_LDFLAGS) $(shell $(LLVM_CONFIG_HOST) --libs --system-libs)
++ifeq ($(OS), Darwin)
 +LLVMLINK += $(LLVM_LDFLAGS) -lLLVM $(shell $(LLVM_CONFIG_HOST) --system-libs)
++else
+ LLVMLINK += $(LLVM_LDFLAGS) $(shell $(LLVM_CONFIG_HOST) --libs --system-libs)
++endif
  # HACK: llvm-config doesn't correctly point to shared libs on all platforms
  #       https://github.com/JuliaLang/julia/issues/29981
  else
