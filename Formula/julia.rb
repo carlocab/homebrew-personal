@@ -16,12 +16,6 @@ class Julia < Formula
     end
   end
 
-  bottle do
-    root_url "https://github.com/carlocab/homebrew-personal/releases/download/julia-1.6.1"
-    sha256 big_sur:  "89e1d35cc940061b7816a9613a86ed9b637489878eebe6c706c48ecc166a8d20"
-    sha256 catalina: "acfa03e1d2089a3d269c3b68b8d9b7214061b26caae4a90de0f599ceb561b2b6"
-  end
-
   depends_on "python@3.9" => :build
   depends_on "curl"
   depends_on "gcc" # for gfortran
@@ -42,7 +36,12 @@ class Julia < Formula
   uses_from_macos "perl" => :build
   uses_from_macos "zlib"
 
-  on_macos { patch :DATA }
+  # Fix compilation with `USE_SYSTEM_LLVM=1`.
+  # https://github.com/JuliaLang/julia/pull/40680
+  patch do
+    url "https://github.com/JuliaLang/julia/commit/867564835af58cb0755b31c2851ce85638ac466a.patch?full_index=1"
+    sha256 "4852df7a0c7962c2450a5423de3724a027acdd87968a0d86748d0d6c0291ae39"
+  end
 
   def install
     # Build documentation available at
@@ -80,30 +79,31 @@ class Julia < Formula
     gcc = Formula["gcc"]
     gcc_ver = gcc.any_installed_version.major
     on_macos do
-      ENV.append "LDFLAGS", "-Wl,-rpath,#{HOMEBREW_PREFIX}/lib"
-      ENV.append "LDFLAGS", "-Wl,-rpath,#{gcc.opt_lib}/gcc/#{gcc_ver}"
       deps.map(&:to_formula).select(&:keg_only?).map(&:opt_lib).each do |lib|
         ENV.append "LDFLAGS", "-Wl,-rpath,#{lib}"
       end
+      ENV.append "LDFLAGS", "-Wl,-rpath,#{gcc.opt_lib}/gcc/#{gcc_ver}"
+      # List these two last, since we want keg-only libraries to be found first
+      ENV.append "LDFLAGS", "-Wl,-rpath,#{HOMEBREW_PREFIX}/lib"
+      ENV.append "LDFLAGS", "-Wl,-rpath,/usr/lib"
     end
 
     inreplace "Make.inc" do |s|
       s.change_make_var! "LOCALBASE", HOMEBREW_PREFIX
     end
 
-    # The Makefile tries to create this symlink but the way it does so is broken.
-    (buildpath/"usr/lib/julia").install_symlink Formula["llvm"].opt_lib/shared_library("libLLVM")
-
-    ENV.deparallelize
     system "make", *args, "install"
 
+    # Create copies of the necessary gcc libraries in `buildpath/"usr/lib"`
     system "make", "clean"
     system "make", "-C", "deps", "USE_SYSTEM_CSL=1", "install-csl"
     # Install gcc library symlinks where Julia expects them
     (gcc.opt_lib/"gcc/#{gcc_ver}").glob(shared_library("*")) do |so|
       next unless (buildpath/"usr/lib"/so.basename).exist?
 
-      (lib/"julia").install_symlink so
+      # Use `ln_sf` instead of `install_symlink` to avoid referencing
+      # gcc's full version and revision number in the symlink path
+      ln_sf "../../../../../opt/gcc/lib/gcc/#{gcc_ver}/#{so.basename}", lib/"julia"
     end
 
     # Julia looks for a CA Cert in pkgshare, so we provide one there
@@ -113,20 +113,6 @@ class Julia < Formula
   test do
     assert_equal "4", shell_output("#{bin}/julia -E '2 + 2'").chomp
     system "julia", "-e", 'Base.runtests("core")'
+    system "julia", "-e", 'Base.runtests("Zlib_jll")'
   end
 end
-
-__END__
-diff --git a/src/Makefile b/src/Makefile
-index 0de23588bc..37838088c5 100644
---- a/src/Makefile
-+++ b/src/Makefile
-@@ -100,7 +100,7 @@ LLVM_CXXFLAGS := $(shell $(LLVM_CONFIG_HOST) --cxxflags)
-
- ifeq ($(JULIACODEGEN),LLVM)
- ifneq ($(USE_SYSTEM_LLVM),0)
--LLVMLINK += $(LLVM_LDFLAGS) $(shell $(LLVM_CONFIG_HOST) --libs --system-libs)
-+LLVMLINK += $(LLVM_LDFLAGS) -lLLVM $(shell $(LLVM_CONFIG_HOST) --system-libs)
- # HACK: llvm-config doesn't correctly point to shared libs on all platforms
- #       https://github.com/JuliaLang/julia/issues/29981
- else
