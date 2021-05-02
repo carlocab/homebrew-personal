@@ -12,9 +12,7 @@ jobs:
     runs-on: ${{ matrix.os }}
     steps:
       - name: Uninstall everything
-        run: |
-            brew uninstall $(brew list --formula)
-            brew uninstall $(brew list --cask)
+        run: brew uninstall $(brew list --formula)
 
       - name: Set up Homebrew
         id: set-up-homebrew
