@@ -12,6 +12,10 @@ jobs:
         id: set-up-homebrew
         uses: Homebrew/actions/setup-homebrew@master
 
-      - run: brew install carlocab/personal/julia
+      - name: Uninstall Julia cask
+        run: brew uninstall --cask julia
 
-      - run: $(brew --prefix julia)/bin/julia -e 'Base.runtests("all"; ncores=Sys.CPU_THREADS)'
+      - name: Install Julia formula
+        run: brew install carlocab/personal/julia
+
+      - run: julia -e 'Base.runtests("all"; ncores=Sys.CPU_THREADS)'
