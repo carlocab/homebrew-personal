@@ -16,12 +16,6 @@ class Julia < Formula
     end
   end
 
-  bottle do
-    root_url "https://github.com/carlocab/homebrew-personal/releases/download/julia-1.6.1"
-    sha256 big_sur:  "e87a59c46d5194bdf663bdff9b541b16bb96ed7e8754cb607b2c58c637a55c0d"
-    sha256 catalina: "d2617e5a50e9beadc8f769bcbc20d220c2955374c86669c4a6ba576077ba2ba8"
-  end
-
   depends_on "python@3.9" => :build
   depends_on "curl"
   depends_on "gcc" # for gfortran
@@ -93,6 +87,11 @@ class Julia < Formula
       # List these two last, since we want keg-only libraries to be found first
       ENV.append "LDFLAGS", "-Wl,-rpath,#{HOMEBREW_PREFIX}/lib"
       ENV.append "LDFLAGS", "-Wl,-rpath,/usr/lib"
+    end
+
+    on_linux do
+      ENV.append "LDFLAGS", "-Wl,-rpath,#{opt_lib}"
+      ENV.append "LDFLAGS", "-Wl,-rpath,#{opt_lib}/julia"
     end
 
     inreplace "Make.inc" do |s|
