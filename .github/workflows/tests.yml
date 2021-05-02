@@ -11,6 +11,11 @@ jobs:
       fail-fast: false
     runs-on: ${{ matrix.os }}
     steps:
+      - name: Uninstall everything
+        run: |
+            brew uninstall $(brew list --formula)
+            brew uninstall $(brew list --cask)
+
       - name: Set up Homebrew
         id: set-up-homebrew
         uses: Homebrew/actions/setup-homebrew@master
