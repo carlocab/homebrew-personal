@@ -13,6 +13,7 @@ jobs:
         uses: Homebrew/actions/setup-homebrew@master
 
       - name: Uninstall Julia cask
+        if: matrix.os != 'ubuntu-latest'
         run: brew uninstall --cask julia
 
       - name: Install Julia formula
