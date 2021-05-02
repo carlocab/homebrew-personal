@@ -1,0 +1,12 @@
+name: Test Julia Cask
+on: workflow_dispatch
+jobs:
+  test-julia:
+    strategy:
+      matrix:
+        os: [macos-11.0, macOS-latest]
+      fail-fast: false
+    runs-on: ${{ matrix.os }}
+    steps:
+      - name: Run Julia unit tests
+        run: julia -e 'Base.runtests("all"; ncores=Sys.CPU_THREADS)'
