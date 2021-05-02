@@ -1,0 +1,22 @@
+name: Test Julia (HEAD)
+on: workflow_dispatch
+jobs:
+  test-julia:
+    strategy:
+      matrix:
+        os: [macos-11.0, macOS-latest, ubuntu-latest]
+      fail-fast: false
+    runs-on: ${{ matrix.os }}
+    steps:
+      - name: Set up Homebrew
+        id: set-up-homebrew
+        uses: Homebrew/actions/setup-homebrew@master
+
+      - name: Uninstall Julia cask
+        if: matrix.os != 'ubuntu-latest'
+        run: brew uninstall --cask julia
+
+      - name: Install Julia formula
+        run: brew install --HEAD carlocab/personal/julia
+
+      - run: julia -e 'Base.runtests("all"; ncores=Sys.CPU_THREADS)'
