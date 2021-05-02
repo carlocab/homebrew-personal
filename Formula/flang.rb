@@ -49,11 +49,13 @@ class Flang < Formula
   end
 
   def caveats
-    <<~EOS
-      Flang currently requires an external Fortran compiler to compile and link
-      Fortran source files. You can install one with
+    on_macos do
+      <<~EOS
+        Flang currently requires an external Fortran compiler to compile and link
+        Fortran source files. You can install one with
         brew install gcc
-    EOS
+      EOS
+    end
   end
 
   test do
