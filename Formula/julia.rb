@@ -16,12 +16,6 @@ class Julia < Formula
     end
   end
 
-  bottle do
-    root_url "https://github.com/carlocab/homebrew-personal/releases/download/julia-1.6.1"
-    sha256 big_sur:  "003a0924c16e184ae69550912d265ea521589a7f55c8490e30dcf509feaa3274"
-    sha256 catalina: "11001148a6b98178e90628182d250b7682db448f22a261e88e86cd2602bf8ddc"
-  end
-
   depends_on "python@3.9" => :build
   depends_on "curl"
   depends_on "gcc" # for gfortran
@@ -81,6 +75,7 @@ class Julia < Formula
       PYTHON=python3
     ]
     args << "USE_SYSTEM_LIBUNWIND=1" if build.head?
+    args << "TAGGED_RELEASE_BANNER=Built by #{tap.user}"
 
     gcc = Formula["gcc"]
     gcc_ver = gcc.any_installed_version.major
@@ -111,6 +106,14 @@ class Julia < Formula
       # gcc's full version and revision number in the symlink path
       ln_sf "../../../../../opt/gcc/lib/gcc/#{gcc_ver}/#{so.basename}", lib/"julia"
     end
+
+    # Julia looks for libopenblas as libopenblas64_
+    (lib/"julia").install_symlink shared_library("libopenblas") => shared_library("libopenblas64_")
+
+    # Remove library versions from MbedTLS_jll
+    file = pkgshare/"stdlib/v#{version.major_minor}/MbedTLS_jll/src/MbedTLS_jll.jl"
+    inreplace file, %r{@rpath/lib(\w+)(\.\d+)*\.dylib}, "@rpath/lib\\1.dylib"
+    inreplace file, /lib(\w+)\.so(\.\d+)*/, "lib\\1.so"
 
     # Julia looks for a CA Cert in pkgshare, so we provide one there
     pkgshare.install_symlink Formula["openssl@1.1"].pkgetc/"cert.pem"
