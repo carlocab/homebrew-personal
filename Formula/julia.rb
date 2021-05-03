@@ -16,13 +16,6 @@ class Julia < Formula
     end
   end
 
-  bottle do
-    root_url "https://github.com/carlocab/homebrew-personal/releases/download/julia-1.6.1"
-    sha256                               big_sur:      "13f1f21bc015875e6dee7b714bd5638a979ba542bca726170d1b8c3c8e1d97ba"
-    sha256                               catalina:     "3e67d4652373f77e9071e02abd472d912439bcaa0ab33d4618699c8e58f28fe4"
-    sha256 cellar: :any_skip_relocation, x86_64_linux: "c76a8905d5bcc12f4ad404b1afe9f1bc85c6ac06b7ad1b02a693535d488f8391"
-  end
-
   depends_on "python@3.9" => :build
   depends_on "curl"
   depends_on "gcc" # for gfortran
@@ -113,6 +106,17 @@ class Julia < Formula
       s.change_make_var! "LOCALBASE", HOMEBREW_PREFIX
     end
 
+    # Remove library versions from MbedTLS_jll, nghttp2_jll, and libLLVM_jll
+    # https://git.archlinux.org/svntogit/community.git/tree/trunk/julia-hardcoded-libs.patch?h=packages/julia
+    %w[MbedTLS nghttp2].each do |dep|
+      (buildpath/"stdlib").glob("**/#{dep}_jll.jl") do |jll|
+        inreplace jll, %r{@rpath/lib(\w+)(\.\d+)*\.dylib}, "@rpath/lib\\1.dylib"
+        inreplace jll, /lib(\w+)\.so(\.\d+)*/, "lib\\1.so"
+      end
+    end
+    inreplace (buildpath/"stdlib").glob("**/libLLVM_jll.jl"), /libLLVM-\d+jl\.so/, "libLLVM.so"
+    (buildpath/"usr/share/julia").install_symlink Formula["openssl@1.1"].pkgetc/"cert.pem"
+
     system "make", *args, "install"
 
     # Create copies of the necessary gcc libraries in `buildpath/"usr/lib"`
@@ -129,13 +133,6 @@ class Julia < Formula
 
     # Julia looks for libopenblas as libopenblas64_
     (lib/"julia").install_symlink shared_library("libopenblas") => shared_library("libopenblas64_")
-
-    # Remove library versions from MbedTLS_jll and libLLVM_jll
-    (pkgshare/"stdlib").glob("**/MbedTLS_jll.jl") do |jll|
-      inreplace jll, %r{@rpath/lib(\w+)(\.\d+)*\.dylib}, "@rpath/lib\\1.dylib"
-      inreplace jll, /lib(\w+)\.so(\.\d+)*/, "lib\\1.so"
-    end
-    inreplace (pkgshare/"stdlib").glob("**/libLLVM_jll.jl"), /libLLVM-\d+jl\.so/, "libLLVM.so"
 
     # Julia looks for a CA Cert in pkgshare, so we provide one there
     pkgshare.install_symlink Formula["openssl@1.1"].pkgetc/"cert.pem"
