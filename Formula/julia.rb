@@ -113,6 +113,17 @@ class Julia < Formula
       s.change_make_var! "LOCALBASE", HOMEBREW_PREFIX
     end
 
+    # Remove library versions from MbedTLS_jll, nghttp2_jll, and libLLVM_jll
+    # https://git.archlinux.org/svntogit/community.git/tree/trunk/julia-hardcoded-libs.patch?h=packages/julia
+    %w[MbedTLS nghttp2].each do |dep|
+      (buildpath/"stdlib").glob("**/#{dep}_jll.jl") do |jll|
+        inreplace jll, %r{@rpath/lib(\w+)(\.\d+)*\.dylib}, "@rpath/lib\\1.dylib"
+        inreplace jll, /lib(\w+)\.so(\.\d+)*/, "lib\\1.so"
+      end
+    end
+    inreplace (buildpath/"stdlib").glob("**/libLLVM_jll.jl"), /libLLVM-\d+jl\.so/, "libLLVM.so"
+    (buildpath/"usr/share/julia").install_symlink Formula["openssl@1.1"].pkgetc/"cert.pem"
+
     system "make", *args, "install"
 
     # Create copies of the necessary gcc libraries in `buildpath/"usr/lib"`
@@ -129,16 +140,6 @@ class Julia < Formula
 
     # Julia looks for libopenblas as libopenblas64_
     (lib/"julia").install_symlink shared_library("libopenblas") => shared_library("libopenblas64_")
-
-    # Remove library versions from MbedTLS_jll and libLLVM_jll
-    (pkgshare/"stdlib").glob("**/MbedTLS_jll.jl") do |jll|
-      inreplace jll, %r{@rpath/lib(\w+)(\.\d+)*\.dylib}, "@rpath/lib\\1.dylib"
-      inreplace jll, /lib(\w+)\.so(\.\d+)*/, "lib\\1.so"
-    end
-    inreplace (pkgshare/"stdlib").glob("**/libLLVM_jll.jl"), /libLLVM-\d+jl\.so/, "libLLVM.so"
-
-    # Julia looks for a CA Cert in pkgshare, so we provide one there
-    pkgshare.install_symlink Formula["openssl@1.1"].pkgetc/"cert.pem"
   end
 
   test do
