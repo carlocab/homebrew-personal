@@ -24,7 +24,6 @@ class Julia < Formula
   end
 
   depends_on "python@3.9" => :build
-  depends_on "curl"
   depends_on "gcc" # for gfortran
   depends_on "gmp"
   depends_on "libgit2"
@@ -41,6 +40,7 @@ class Julia < Formula
   depends_on "utf8proc"
 
   uses_from_macos "perl" => :build
+  uses_from_macos "curl"
   uses_from_macos "zlib"
 
   on_linux do
@@ -122,7 +122,13 @@ class Julia < Formula
       end
     end
     inreplace (buildpath/"stdlib").glob("**/libLLVM_jll.jl"), /libLLVM-\d+jl\.so/, "libLLVM.so"
+
+    # Use OpenSSL's CA cert
     (buildpath/"usr/share/julia").install_symlink Formula["openssl@1.1"].pkgetc/"cert.pem"
+
+    # Make wants to create a symlink to `libcurl`, but that's impossible on Big Sur
+    (buildpath/"usr/lib/julia").mkpath
+    touch buildpath/"usr/lib/julia/libcurl.dylib" if MacOS.version >= :big_sur
 
     system "make", *args, "install"
 
@@ -148,6 +154,8 @@ class Julia < Formula
   test do
     assert_equal "4", shell_output("#{bin}/julia -E '2 + 2'").chomp
     system bin/"julia", "-e", 'Base.runtests("core")'
+    system bin/"julia", "-e", 'Base.runtests("LibCURL")'
+    system bin/"julia", "-e", 'Base.runtests("LibCURL_jll")'
     system bin/"julia", "-e", 'Base.runtests("Zlib_jll")'
     system bin/"julia", "-e", 'Base.runtests("OpenBLAS_jll")'
     system bin/"julia", "-e", 'Base.runtests("libLLVM_jll")'
