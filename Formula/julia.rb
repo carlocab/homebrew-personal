@@ -43,7 +43,10 @@ class Julia < Formula
   uses_from_macos "perl" => :build
   uses_from_macos "zlib"
 
-  on_linux { depends_on "libunwind" }
+  on_linux do
+    depends_on "patchelf" => :build
+    depends_on "libunwind"
+  end
 
   # Fix compilation with `USE_SYSTEM_LLVM=1`.
   # https://github.com/JuliaLang/julia/pull/40680
@@ -74,6 +77,7 @@ class Julia < Formula
       USE_SYSTEM_NGHTTP2=1
       USE_SYSTEM_CURL=1
       USE_SYSTEM_LIBGIT2=1
+      USE_SYSTEM_PATCHELF=1
       USE_SYSTEM_ZLIB=1
       USE_SYSTEM_P7ZIP=1
       LIBBLAS=-lopenblas
