@@ -16,6 +16,13 @@ class Julia < Formula
     end
   end
 
+  bottle do
+    root_url "https://github.com/carlocab/homebrew-personal/releases/download/julia-1.6.1"
+    sha256                               big_sur:      "92a77268eb290a4eaee5dfb4aa8a8ee8d5c4e60cb3284c24be41266ccbac849b"
+    sha256                               catalina:     "6172ee47afa285da1566c74f416fd4638346ed82ea62a4acd89f866e21755ff3"
+    sha256 cellar: :any_skip_relocation, x86_64_linux: "0d036032b5610fb32ef443ae84d741a373b828e16790e40dda73356097e38ba0"
+  end
+
   depends_on "python@3.9" => :build
   depends_on "curl"
   depends_on "gcc" # for gfortran
