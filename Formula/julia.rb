@@ -16,13 +16,6 @@ class Julia < Formula
     end
   end
 
-  bottle do
-    root_url "https://github.com/carlocab/homebrew-personal/releases/download/julia-1.6.1"
-    sha256                               big_sur:      "92a77268eb290a4eaee5dfb4aa8a8ee8d5c4e60cb3284c24be41266ccbac849b"
-    sha256                               catalina:     "6172ee47afa285da1566c74f416fd4638346ed82ea62a4acd89f866e21755ff3"
-    sha256 cellar: :any_skip_relocation, x86_64_linux: "0d036032b5610fb32ef443ae84d741a373b828e16790e40dda73356097e38ba0"
-  end
-
   depends_on "python@3.9" => :build
   depends_on "curl"
   depends_on "gcc" # for gfortran
@@ -42,6 +35,8 @@ class Julia < Formula
 
   uses_from_macos "perl" => :build
   uses_from_macos "zlib"
+
+  on_linux { depends_on "libunwind" }
 
   # Fix compilation with `USE_SYSTEM_LLVM=1`.
   # https://github.com/JuliaLang/julia/pull/40680
@@ -80,8 +75,10 @@ class Julia < Formula
       LIBLAPACKNAME=libopenblas
       USE_BLAS64=0
       PYTHON=python3
+      MACOSX_VERSION_MIN=#{MacOS.version}
     ]
-    args << "USE_SYSTEM_LIBUNWIND=1" if build.head?
+    on_macos { args << "USE_SYSTEM_LIBUNWIND=1" if build.head? }
+    on_linux { args << "USE_SYSTEM_LIBUNWIND=1" }
     args << "TAGGED_RELEASE_BANNER=Built by #{tap.user}"
 
     gcc = Formula["gcc"]
@@ -135,9 +132,9 @@ class Julia < Formula
 
   test do
     assert_equal "4", shell_output("#{bin}/julia -E '2 + 2'").chomp
-    system "julia", "-e", 'Base.runtests("core")'
-    system "julia", "-e", 'Base.runtests("Zlib_jll")'
-    system "julia", "-e", 'Base.runtests("OpenBLAS_jll")'
-    system "julia", "-e", 'Base.runtests("libLLVM_jll")'
+    system bin/"julia", "-e", 'Base.runtests("core")'
+    system bin/"julia", "-e", 'Base.runtests("Zlib_jll")'
+    system bin/"julia", "-e", 'Base.runtests("OpenBLAS_jll")'
+    system bin/"julia", "-e", 'Base.runtests("libLLVM_jll")'
   end
 end
