@@ -3,6 +3,8 @@ on:
   push:
     branches: main
   pull_request:
+env:
+  HOMEBREW_RELOCATE_METAVARS: 1
 jobs:
   test-bot:
     strategy:
