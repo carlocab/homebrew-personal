@@ -5,8 +5,8 @@ class Julia < Formula
   head "https://github.com/JuliaLang/julia.git"
 
   stable do
-    url "https://github.com/JuliaLang/julia/releases/download/v1.6.1/julia-1.6.1.tar.gz"
-    sha256 "366b8090bd9b2f7817ce132170d569dfa3435d590a1fa5c3e2a75786bd5cdfd5"
+    url "https://github.com/JuliaLang/julia/releases/download/v1.6.1/julia-1.6.1-full.tar.gz"
+    sha256 "71d8e40611361370654e8934c407b2dec04944cf3917c5ecb6482d6b85ed767f"
 
     # Allow flisp to be built against system utf8proc
     # https://github.com/JuliaLang/julia/pull/37723
@@ -14,13 +14,6 @@ class Julia < Formula
       url "https://github.com/JuliaLang/julia/commit/ba653ecb1c81f1465505c2cea38b4f8149dd20b3.patch?full_index=1"
       sha256 "e626ee968e2ce8207c816f39ef9967ab0b5f50cad08a46b1df15d7bf230093cb"
     end
-  end
-
-  bottle do
-    root_url "https://github.com/carlocab/homebrew-personal/releases/download/julia-1.6.1"
-    sha256                               big_sur:      "9b076534988586b09781557ceb94894dc421b04b0c8e7e2132cf46df572a374e"
-    sha256                               catalina:     "01db065e8b12a2a9c60ed2ffbcb3b044c57acd6cbd353c1ccb4a15638d4a7b02"
-    sha256 cellar: :any_skip_relocation, x86_64_linux: "86d9bb2a9773be04a729e125147799255c1251d37d9e025a02a8982ba8fd37ed"
   end
 
   depends_on "python@3.9" => :build
@@ -94,24 +87,28 @@ class Julia < Formula
 
     gcc = Formula["gcc"]
     gcc_ver = gcc.any_installed_version.major
-    on_macos do
-      deps.map(&:to_formula).select(&:keg_only?).map(&:opt_lib).each do |lib|
-        ENV.append "LDFLAGS", "-Wl,-rpath,#{lib}"
-      end
-      ENV.append "LDFLAGS", "-Wl,-rpath,#{gcc.opt_lib}/gcc/#{gcc_ver}"
-      # List these two last, since we want keg-only libraries to be found first
-      ENV.append "LDFLAGS", "-Wl,-rpath,#{HOMEBREW_PREFIX}/lib"
-      ENV.append "LDFLAGS", "-Wl,-rpath,/usr/lib"
-    end
+    gcclibdir = gcc.opt_lib/"gcc/#{gcc.any_installed_version.major}"
 
-    on_linux do
-      ENV.append "LDFLAGS", "-Wl,-rpath,#{opt_lib}"
-      ENV.append "LDFLAGS", "-Wl,-rpath,#{opt_lib}/julia"
+    ldflags = deps.map(&:to_formula).select(&:keg_only?).map(&:opt_lib).map do |libdir|
+      "-Wl,-rpath,#{libdir}"
     end
+    ldflags += %W[
+      -Wl,-rpath,#{gcclibdir}
+      -Wl,-rpath,#{HOMEBREW_PREFIX}/lib
+      -Wl,-rpath,/usr/lib
+    ]
+    ENV.append "LDFLAGS", ldflags.join(" ")
+
+    ENV.append "LDFLAGS", "-Wl,-rpath,#{opt_lib}"
+    ENV.append "LDFLAGS", "-Wl,-rpath,#{opt_lib}/julia"
 
     inreplace "Make.inc" do |s|
       s.change_make_var! "LOCALBASE", HOMEBREW_PREFIX
     end
+
+    # Install `libwhich` build tool first to avoid carrying RPATHs into final build
+    system "make", "-C", "deps", "install-libwhich"
+    ENV.remove "LDFLAGS", ldflags.join(" ")
 
     # Remove library versions from MbedTLS_jll, nghttp2_jll, and libLLVM_jll
     # https://git.archlinux.org/svntogit/community.git/tree/trunk/julia-hardcoded-libs.patch?h=packages/julia
@@ -122,12 +119,13 @@ class Julia < Formula
       end
     end
     inreplace (buildpath/"stdlib").glob("**/libLLVM_jll.jl"), /libLLVM-\d+jl\.so/, "libLLVM.so"
+
+    # Make Julia use OpenSSL's CA cert
     (buildpath/"usr/share/julia").install_symlink Formula["openssl@1.1"].pkgetc/"cert.pem"
 
     system "make", *args, "install"
 
     # Create copies of the necessary gcc libraries in `buildpath/"usr/lib"`
-    system "make", "clean"
     system "make", "-C", "deps", "USE_SYSTEM_CSL=1", "install-csl"
     # Install gcc library symlinks where Julia expects them
     (gcc.opt_lib/"gcc/#{gcc_ver}").glob(shared_library("*")) do |so|
@@ -135,7 +133,7 @@ class Julia < Formula
 
       # Use `ln_sf` instead of `install_symlink` to avoid referencing
       # gcc's full version and revision number in the symlink path
-      ln_sf "../../../../../opt/gcc/lib/gcc/#{gcc_ver}/#{so.basename}", lib/"julia"
+      ln_sf gcclibdir.relative_path_from(lib/"julia"), lib/"julia"
     end
 
     # Julia looks for libopenblas as libopenblas64_
