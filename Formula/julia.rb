@@ -93,12 +93,12 @@ class Julia < Formula
     args << "TAGGED_RELEASE_BANNER=Built by #{tap.user}"
 
     gcc = Formula["gcc"]
-    gcc_ver = gcc.any_installed_version.major
+    gcclibdir = gcc.opt_lib/"gcc"/gcc.any_installed_version.major
     on_macos do
       deps.map(&:to_formula).select(&:keg_only?).map(&:opt_lib).each do |lib|
         ENV.append "LDFLAGS", "-Wl,-rpath,#{lib}"
       end
-      ENV.append "LDFLAGS", "-Wl,-rpath,#{gcc.opt_lib}/gcc/#{gcc_ver}"
+      ENV.append "LDFLAGS", "-Wl,-rpath,#{gcclibdir}"
       # List these two last, since we want keg-only libraries to be found first
       ENV.append "LDFLAGS", "-Wl,-rpath,#{HOMEBREW_PREFIX}/lib"
       ENV.append "LDFLAGS", "-Wl,-rpath,/usr/lib"
@@ -122,20 +122,21 @@ class Julia < Formula
       end
     end
     inreplace (buildpath/"stdlib").glob("**/libLLVM_jll.jl"), /libLLVM-\d+jl\.so/, "libLLVM.so"
+
+    # Use the CA cert provided by OpenSSL
     (buildpath/"usr/share/julia").install_symlink Formula["openssl@1.1"].pkgetc/"cert.pem"
 
     system "make", *args, "install"
 
     # Create copies of the necessary gcc libraries in `buildpath/"usr/lib"`
-    system "make", "clean"
     system "make", "-C", "deps", "USE_SYSTEM_CSL=1", "install-csl"
     # Install gcc library symlinks where Julia expects them
-    (gcc.opt_lib/"gcc/#{gcc_ver}").glob(shared_library("*")) do |so|
+    gcclibdir.glob(shared_library("*")) do |so|
       next unless (buildpath/"usr/lib"/so.basename).exist?
 
       # Use `ln_sf` instead of `install_symlink` to avoid referencing
       # gcc's full version and revision number in the symlink path
-      ln_sf "../../../../../opt/gcc/lib/gcc/#{gcc_ver}/#{so.basename}", lib/"julia"
+      ln_sf gcclibdir.relative_path_from(lib/"julia")/so.basename, lib/"julia"
     end
 
     # Julia looks for libopenblas as libopenblas64_
