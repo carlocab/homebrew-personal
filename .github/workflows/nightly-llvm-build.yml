@@ -49,9 +49,7 @@ jobs:
         run: brew install-bundler-gems
 
       - name: Uninstall all formulae
-        run: |
-          brew uninstall $(brew list --formula)
-          brew cleanup
+        run: brew uninstall $(brew list --formula) && brew cleanup
 
       - name: Run `brew config` and `brew doctor`
         run: brew config && brew doctor
