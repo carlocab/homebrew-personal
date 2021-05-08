@@ -51,12 +51,14 @@ jobs:
       - name: Uninstall all formulae
         run: brew uninstall $(brew list --formula)
 
+      - name: Run `brew config` and `brew doctor`
+        run: brew config && brew doctor
+
       - name: Install prerequisites
-        run: brew install --fetch-HEAD --HEAD --only-dependencies --keep-tmp --verbose llvm
+        run: brew install --HEAD --only-dependencies --keep-tmp --verbose llvm
 
       - name: Install and bottle LLVM
-        run: brew install --fetch-HEAD --HEAD --build-bottle --keep-tmp --verbose llvm
-        # the HEAD flags tell Homebrew to build the develop branch fetch via git
+        run: brew install --HEAD --build-bottle --bottle-arch=native --keep-tmp --verbose llvm
 
       - name: Create bottle
         run: |
@@ -76,7 +78,7 @@ jobs:
       - name: Test LLVM
         run: |
           brew install gnu-sed
-          gsed -i '/clean_version = /c\clean_version = Utils.safe_popen_read(bin/"llvm-config", "--version").chomp' \
+          gsed -i 's|\(clean_version =\).*|\1 Utils.safe_popen_read(bin/"llvm-config", "--version")[/(\d+\.?)*/]|' \
               $(brew --repository homebrew/core)/Formula/llvm.rb
           brew test --HEAD --verbose llvm
 
