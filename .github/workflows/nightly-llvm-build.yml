@@ -74,7 +74,11 @@ jobs:
         run: brew linkage --verbose llvm
 
       - name: Test LLVM
-        run: brew test --HEAD --verbose llvm
+        run: |
+          brew install gnu-sed
+          gsed -i '/clean_version = /c\clean_version = Utils.safe_popen_read(bin/"llvm-config", "--version").chomp' \
+              $(brew --repository homebrew/core)/Formula/llvm.rb
+          brew test --HEAD --verbose llvm
 
       - name: Post logs on failure
         if: failure()
