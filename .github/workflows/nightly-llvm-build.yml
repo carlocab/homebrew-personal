@@ -78,7 +78,7 @@ jobs:
       - name: Test LLVM
         run: |
           brew install gnu-sed
-          gsed -i 's|\(clean_version =\).*|\1 Utils.safe_popen_read(bin/"llvm-config", "--version")[/(\d+\.?)*/]|' \
+          gsed -i 's|\(clean_version =\).*|\1 Utils.safe_popen_read(bin/"llvm-config", "--version")[/(\\d+\\.?)+/]|' \
               $(brew --repository homebrew/core)/Formula/llvm.rb
           brew test --HEAD --verbose llvm
 
