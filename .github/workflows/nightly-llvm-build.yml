@@ -52,7 +52,7 @@ jobs:
         run: brew uninstall $(brew list --formula) && brew cleanup
 
       - name: Run `brew config` and `brew doctor`
-        run: brew config && brew doctor
+        run: brew config && brew doctor || true
 
       - name: Install prerequisites
         run: brew install --HEAD --only-dependencies --keep-tmp --verbose llvm
