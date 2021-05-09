@@ -55,6 +55,12 @@ class Julia < Formula
     sha256 "4852df7a0c7962c2450a5423de3724a027acdd87968a0d86748d0d6c0291ae39"
   end
 
+  def gcclibdir
+    gcc = Formula["gcc"]
+
+    gcc.opt_lib/"gcc"/gcc.any_installed_version.major
+  end
+
   def install
     # Build documentation available at
     # https://github.com/JuliaLang/julia/blob/v#{version}/doc/build/build.md
@@ -92,8 +98,6 @@ class Julia < Formula
     on_linux { args << "USE_SYSTEM_LIBUNWIND=1" }
     args << "TAGGED_RELEASE_BANNER=Built by #{tap.user}"
 
-    gcc = Formula["gcc"]
-    gcclibdir = gcc.opt_lib/"gcc"/gcc.any_installed_version.major
     on_macos do
       deps.map(&:to_formula).select(&:keg_only?).map(&:opt_lib).each do |lib|
         ENV.append "LDFLAGS", "-Wl,-rpath,#{lib}"
@@ -144,6 +148,16 @@ class Julia < Formula
 
     # Julia looks for a CA Cert in pkgshare, so we provide one there
     pkgshare.install_symlink Formula["openssl@1.1"].pkgetc/"cert.pem"
+  end
+
+  def post_install
+    gcclibdir.glob(shared_library("*")) do |so|
+      next unless (lib/"julia"/so.basename).symlink?
+
+      # Use `ln_sf` instead of `install_symlink` to avoid referencing
+      # gcc's full version and revision number in the symlink path
+      ln_sf gcclibdir.relative_path_from(lib/"julia")/so.basename, lib/"julia"
+    end
   end
 
   test do
