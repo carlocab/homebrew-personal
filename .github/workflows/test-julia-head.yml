@@ -19,4 +19,9 @@ jobs:
       - name: Install Julia formula
         run: brew install --HEAD carlocab/personal/julia
 
-      - run: julia -e 'Base.runtests("all"; ncores=Sys.CPU_THREADS)'
+      - name: Run tests
+        run: |
+          julia -e 'include(joinpath(Sys.BINDIR, Base.DATAROOTDIR, "julia", "test", "choosetests.jl")); \
+            Base.runtests(append!(choosetests()[1], ["LibGit2/online", "download"]); ncores=Sys.CPU_THREADS)'
+
+      # - run: julia -e 'Base.runtests("all"; ncores=Sys.CPU_THREADS)'
