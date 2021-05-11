@@ -1,0 +1,15 @@
+name: Test Julia Nightly Cask
+on: workflow_dispatch
+jobs:
+  test-julia-nightly:
+    strategy:
+      matrix:
+        os: [macos-11.0, macOS-latest]
+      fail-fast: false
+    runs-on: ${{ matrix.os }}
+    steps:
+      - name: Install julia-nightly cask
+        run: brew install --cask homebrew/cask-versions/julia-nightly
+
+      - name: Run Julia unit tests
+        run: julia-nightly -e 'Base.runtests("all"; ncores=Sys.CPU_THREADS)'
