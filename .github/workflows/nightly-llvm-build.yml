@@ -83,5 +83,7 @@ jobs:
           brew test --HEAD --verbose llvm
 
       - name: Post logs on failure
+        env:
+          HOMEBREW_GITHUB_API_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         if: failure()
         run: brew gist-logs --with-hostname --verbose llvm
