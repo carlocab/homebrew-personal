@@ -62,9 +62,8 @@ jobs:
 
       - name: Create bottle
         run: |
-          brew bottle --verbose llvm
-          mkdir bottles
-          mv *.bottle.* bottles
+          mkdir bottles && cd bottles
+          brew bottle --json --only-json-tab --verbose --debug llvm
 
       - name: Upload bottle
         uses: actions/upload-artifact@main
