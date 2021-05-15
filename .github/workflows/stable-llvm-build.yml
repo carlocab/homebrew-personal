@@ -1,0 +1,64 @@
+name: Stable LLVM Head Build
+on:
+  workflow_dispatch:
+
+jobs:
+  build-LLVM:
+    strategy:
+      matrix:
+        os: [macOS-11.0, macOS-latest, ubuntu-latest]
+      fail-fast: false
+    runs-on: ${{ matrix.os }}
+
+    steps:
+      - name: Set up Homebrew
+        id: set-up-homebrew
+        uses: Homebrew/actions/setup-homebrew@master
+
+      - name: Cache Homebrew Bundler RubyGems
+        id: cache
+        uses: actions/cache@v1
+        with:
+          path: ${{ steps.set-up-homebrew.outputs.gems-path }}
+          key: ${{ runner.os }}-rubygems-${{ steps.set-up-homebrew.outputs.gems-hash }}
+          restore-keys: ${{ runner.os }}-rubygems-
+
+      - name: Install Homebrew Bundler RubyGems
+        if: steps.cache.outputs.cache-hit != 'true'
+        run: brew install-bundler-gems
+
+      - name: Uninstall all formulae
+        run: brew uninstall $(brew list --formula) && brew cleanup
+
+      - name: Run `brew config` and `brew doctor`
+        run: brew config && brew doctor || true
+
+      - name: Install prerequisites
+        run: brew install --only-dependencies --keep-tmp --verbose llvm
+
+      - name: Install and bottle LLVM
+        run: brew install --build-bottle --bottle-arch=skylake-avx512 --keep-tmp --verbose llvm
+
+      - name: Create bottle
+        run: |
+          mkdir bottles && cd bottles
+          brew bottle --json --only-json-tab --verbose --debug llvm
+
+      - name: Upload bottle
+        uses: actions/upload-artifact@main
+        with:
+          name: bottle-${{ matrix.os }}
+          path: bottles
+
+      - name: Show linkage
+        run: brew linkage --verbose llvm
+
+      - name: Test LLVM
+        run: |
+          brew test --verbose llvm
+
+      - name: Post logs on failure
+        env:
+          HOMEBREW_GITHUB_API_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        if: failure()
+        run: brew gist-logs --with-hostname --verbose llvm
