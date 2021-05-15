@@ -1,4 +1,4 @@
-name: Stable LLVM Head Build
+name: Stable LLVM Build
 on:
   workflow_dispatch:
 
