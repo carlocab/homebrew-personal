@@ -58,7 +58,7 @@ jobs:
         run: brew install --HEAD --only-dependencies --keep-tmp --verbose llvm
 
       - name: Install and bottle LLVM
-        run: brew install --HEAD --build-bottle --bottle-arch=native --keep-tmp --verbose llvm
+        run: brew install --HEAD --build-bottle --bottle-arch=skylake-avx512 --keep-tmp --verbose llvm
 
       - name: Create bottle
         run: |
@@ -79,6 +79,7 @@ jobs:
           brew install gnu-sed
           gsed -i 's|\(clean_version =\).*|\1 Utils.safe_popen_read(bin/"llvm-config", "--version")[/(\\d+\\.?)+/]|' \
               $(brew --repository homebrew/core)/Formula/llvm.rb
+          gsed -i '/version\.major/d' $(brew --repository homebrew/core)/Formula/llvm.rb
           brew test --HEAD --verbose llvm
 
       - name: Post logs on failure
