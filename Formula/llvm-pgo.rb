@@ -165,6 +165,10 @@ class LlvmPgo < Formula
       system "cmake", "--build", ".", "--target", "all"
     end
 
+    # Merge the generated profile data
+    system llvmpath/"build-stage1/bin/llvm-profdata", "-output=#{buildpath}/profdata.prof",
+                                                      *Dir[llvmpath/"build-stage2/profiles/*.profraw"]
+
     prefix.install buildpath.children
 
     # mkdir llvmpath/"build" do
