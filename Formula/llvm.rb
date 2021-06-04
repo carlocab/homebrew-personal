@@ -1,4 +1,4 @@
-class LlvmPgo < Formula
+class Llvm < Formula
   desc "Next-gen compiler infrastructure"
   homepage "https://llvm.org/"
   url "https://github.com/llvm/llvm-project/releases/download/llvmorg-12.0.0/llvm-project-12.0.0.src.tar.xz"
@@ -14,8 +14,6 @@ class LlvmPgo < Formula
 
   # Clang cannot find system headers if Xcode CLT is not installed
   pour_bottle? only_if: :clt_installed
-
-  keg_only "duplicates the LLVM formula"
 
   # https://llvm.org/docs/GettingStarted.html#requirement
   # We intentionally use Make instead of Ninja.
@@ -68,7 +66,7 @@ class LlvmPgo < Formula
 
     # we install the lldb Python module into libexec to prevent users from
     # accidentally importing it with a non-Homebrew Python or a Homebrew Python
-    # in a non-default prefix
+    # in a non-default prefix. See https://lldb.llvm.org/resources/caveats.html
     args = %W[
       -DLLVM_ENABLE_PROJECTS=#{projects.join(";")}
       -DLLVM_ENABLE_RUNTIMES=#{runtimes.join(";")}
@@ -91,6 +89,8 @@ class LlvmPgo < Formula
       -DLLDB_PYTHON_RELATIVE_PATH=libexec/#{site_packages}
       -DLIBOMP_INSTALL_ALIASES=OFF
       -DCLANG_PYTHON_BINDINGS_VERSIONS=#{py_ver}
+      -DPACKAGE_VENDOR=#{tap.user}
+      -DBUG_REPORT_URL=#{tap.issues_url}
     ]
 
     if MacOS.version >= :catalina
@@ -101,92 +101,133 @@ class LlvmPgo < Formula
       args << "-DFFI_LIBRARY_DIR=#{Formula["libffi"].opt_lib}"
     end
 
+    sdk = MacOS.sdk_path_if_needed
     on_macos do
+      args << "-DLLVM_ENABLE_LTO=ON"
       args << "-DLLVM_BUILD_LLVM_C_DYLIB=ON"
       args << "-DLLVM_ENABLE_LIBCXX=ON"
       args << "-DLLVM_CREATE_XCODE_TOOLCHAIN=#{MacOS::Xcode.installed? ? "ON" : "OFF"}"
-      args << "-DRUNTIMES_CMAKE_ARGS=-DCMAKE_INSTALL_RPATH=@loader_path/../lib"
-
-      sdk = MacOS.sdk_path_if_needed
+      args << "-DRUNTIMES_CMAKE_ARGS=-DCMAKE_INSTALL_RPATH=#{rpath}"
       args << "-DDEFAULT_SYSROOT=#{sdk}" if sdk
     end
 
-    llvmpath = buildpath/"llvm"
-    linux_args = [
-      "-DLLVM_ENABLE_LIBCXX=OFF",
-      "-DLLVM_CREATE_XCODE_TOOLCHAIN=OFF",
-      "-DCLANG_DEFAULT_CXX_STDLIB=libstdc++",
-      # Enable llvm gold plugin for LTO
-      "-DLLVM_BINUTILS_INCDIR=#{Formula["binutils"].opt_include}",
-    ]
-
     on_linux do
-      args += linux_args
+      args << "-DLLVM_ENABLE_LIBCXX=OFF"
+      args << "-DLLVM_CREATE_XCODE_TOOLCHAIN=OFF"
+      args << "-DCLANG_DEFAULT_CXX_STDLIB=libstdc++"
+      # Enable llvm gold plugin for LTO
+      args << "-DLLVM_BINUTILS_INCDIR=#{Formula["binutils"].opt_include}"
     end
+
+    llvmpath = buildpath/"llvm"
+    # We build LLVM a few times first for optimisations. See
+    # https://github.com/Homebrew/homebrew-core/issues/77975
 
     # PGO build adapted from:
     # https://llvm.org/docs/HowToBuildWithPGO.html#building-clang-with-pgo
     # https://github.com/llvm/llvm-project/blob/33ba8bd2/llvm/utils/collect_and_build_with_pgo.py
+    # https://github.com/facebookincubator/BOLT/blob/01f471e7/docs/OptimizingClang.md
+    if build.stable?
+      extra_args = ["-DLLVM_TARGETS_TO_BUILD=#{Hardware::CPU.intel? ? "X86" : "AArch64"}"]
+      on_macos do
+        extra_args << "-DLLVM_ENABLE_LIBCXX=ON"
+        extra_args << "-DCMAKE_C_FLAGS=-rtlib=compiler-rt"
+        extra_args << "-DCMAKE_CXX_FLAGS=-rtlib=compiler-rt"
 
-    # First, build a stage1 compiler
-    mkdir llvmpath/"build-stage1" do
-      system "cmake", "-G", "Unix Makefiles", "..",
-                            "-DLLVM_ENABLE_PROJECTS=clang;compiler-rt;lld",
-                            "-DLLVM_TARGETS_TO_BUILD=Native",
-                            "-DCMAKE_BUILD_TYPE=Release",
-                            "-DCMAKE_VERBOSE_MAKEFILE=ON"
-      system "cmake", "--build", ".", "--target", "clang", "llvm-profdata", "profile"
+        if sdk
+          extra_args << "-DDEFAULT_SYSROOT=#{sdk}"
+          extra_args << "-DOSX_SYSROOT=#{sdk}"
+          extra_args << "-DCMAKE_SYSROOT=#{sdk}"
+        end
+      end
+
+      # First, build a stage1 compiler. It might be possible to skip this step on macOS
+      # and use system Clang instead, but this stage does not take too long, and we want
+      # to avoid incompatibilities from generating profile data with a newer Clang than
+      # the one we consume the data with.
+      mkdir llvmpath/"stage1" do
+        system "cmake", "-G", "Unix Makefiles", "..",
+                        "-DLLVM_ENABLE_PROJECTS=clang;compiler-rt;lld",
+                        *extra_args, *std_cmake_args
+        system "cmake", "--build", ".", "--target", "clang", "llvm-profdata", "profile"
+        on_macos { system "cmake", "--build", ".", "--target", "LTO", "llvm-libtool-darwin" }
+      end
+
+      # Next, build an instrumented stage2 compiler
+      mkdir llvmpath/"stage2" do
+        system "cmake", "-G", "Unix Makefiles", "..",
+                        "-DCMAKE_C_COMPILER=#{llvmpath}/stage1/bin/clang",
+                        "-DCMAKE_CXX_COMPILER=#{llvmpath}/stage1/bin/clang++",
+                        "-DLLVM_ENABLE_PROJECTS=clang;compiler-rt;lld",
+                        "-DLLVM_BUILD_INSTRUMENTED=IR",
+                        "-DLLVM_BUILD_RUNTIME=NO",
+                        *extra_args, *std_cmake_args
+        system "cmake", "--build", ".", "--target", "clang", "lld"
+
+        # We run some `check-*` targets to increase profiling
+        # coverage. These do not need to succeed.
+        begin
+          system "cmake", "--build", ".", "--target", "check-clang", "check-llvm", "--", "--keep-going"
+        rescue RuntimeError
+          nil
+        end
+      end
+
+      # Then, generate the profile data
+      mkdir llvmpath/"stage2-profdata" do
+        system "cmake", "-G", "Unix Makefiles", "..",
+                        "-DCMAKE_C_COMPILER=#{llvmpath}/stage2/bin/clang",
+                        "-DCMAKE_CXX_COMPILER=#{llvmpath}/stage2/bin/clang++",
+                        "-DLLVM_ENABLE_PROJECTS=#{projects.join(";")};#{runtimes.join(";")}",
+                        *extra_args, *std_cmake_args
+
+        # This build is for profiling, so it is safe to ignore errors.
+        # We pass `--keep-going` to `make` to ignore the error that requires
+        # deparallelisation on ARM. (See below.)
+        begin
+          system "cmake", "--build", ".", "--", "--keep-going"
+        rescue RuntimeError
+          nil
+        end
+      end
+
+      # Merge the generated profile data
+      profpath = llvmpath/"stage2/profiles"
+      system llvmpath/"stage1/bin/llvm-profdata",
+             "merge",
+             "-output=#{profpath}/pgo_profile.prof",
+             *Dir[profpath/"*.profraw"]
+
+      # Make sure to build with our profiled compiler and use the profile data
+      args << "-DCMAKE_C_COMPILER=#{llvmpath}/stage1/bin/clang"
+      args << "-DCMAKE_CXX_COMPILER=#{llvmpath}/stage1/bin/clang++"
+      args << "-DLLVM_PROFDATA_FILE=#{profpath}/pgo_profile.prof"
+      args << "-DCMAKE_C_FLAGS=-Wno-backend-plugin -rtlib=compiler-rt"
+      args << "-DCMAKE_CXX_FLAGS=-Wno-backend-plugin -rtlib=compiler-rt"
+      on_macos { args << "-DCMAKE_LIBTOOL=#{llvmpath}/stage1/bin/llvm-libtool-darwin" }
     end
 
-    # Next, build an instrumented stage2 compiler
-    mkdir llvmpath/"build-stage2" do
-      system "cmake", "-G", "Unix Makefiles", "..",
-                            "-DCMAKE_C_COMPILER=#{llvmpath}/build-stage1/bin/clang",
-                            "-DCMAKE_CXX_COMPILER=#{llvmpath}/build-stage1/bin/clang++",
-                            "-DLLVM_ENABLE_PROJECTS=clang;compiler-rt;lld",
-                            "-DLLVM_TARGETS_TO_BUILD=Native",
-                            "-DLLVM_BUILD_INSTRUMENTED=IR",
-                            "-DLLVM_BUILD_RUNTIME=NO",
-                            "-DCMAKE_BUILD_TYPE=Release",
-                            "-DCMAKE_VERBOSE_MAKEFILE=ON"
-      system "cmake", "--build", ".", "--target", "clang", "lld"
-      system "cmake", "--build", ".", "--target", "check-clang", "check-llvm"
+    # Now, we can build.
+    mkdir llvmpath/"build" do
+      system "cmake", "-G", "Unix Makefiles", "..", *(std_cmake_args + args)
+      # Workaround for CMake Error: failed to create symbolic link
+      ENV.deparallelize if Hardware::CPU.arm?
+      system "cmake", "--build", "."
+      system "cmake", "--build", ".", "--target", "install"
+      system "cmake", "--build", ".", "--target", "install-xcode-toolchain" if MacOS::Xcode.installed?
     end
 
-    # Then, generate profile data
-    mkdir llvmpath/"build-stage2-profdata" do
-      system "cmake", "-G", "Unix Makefiles", "..",
-                            "-DCMAKE_C_COMPILER=#{llvmpath}/build-stage2/bin/clang",
-                            "-DCMAKE_CXX_COMPILER=#{llvmpath}/build-stage2/bin/clang++",
-                            "-DLLVM_ENABLE_PROJECTS=clang;compiler-rt;lld",
-                            "-DLLVM_TARGETS_TO_BUILD=Native",
-                            "-DCMAKE_BUILD_TYPE=Release",
-                            "-DCMAKE_VERBOSE_MAKEFILE=ON"
-      system "cmake", "--build", ".", "--target", "all"
+    on_macos do
+      # Install versioned symlink, or else `llvm-config` doesn't work properly
+      lib.install_symlink "libLLVM.dylib" => "libLLVM-#{version.major}.dylib" unless build.head?
     end
 
-    prefix.install buildpath.children
+    # Install LLVM Python bindings
+    # Clang Python bindings are installed by CMake
+    (lib/site_packages).install llvmpath/"bindings/python/llvm"
 
-    # mkdir llvmpath/"build" do
-    #   system "cmake", "-G", "Unix Makefiles", "..", *(std_cmake_args + args)
-    #   # Workaround for CMake Error: failed to create symbolic link
-    #   ENV.deparallelize if Hardware::CPU.arm?
-    #   system "cmake", "--build", "."
-    #   system "cmake", "--build", ".", "--target", "install"
-    #   system "cmake", "--build", ".", "--target", "install-xcode-toolchain" if MacOS::Xcode.installed?
-    # end
-
-    # on_macos do
-    #   # Install versioned symlink, or else `llvm-config` doesn't work properly
-    #   lib.install_symlink "libLLVM.dylib" => "libLLVM-#{version.major}.dylib" unless build.head?
-    # end
-
-    # # Install LLVM Python bindings
-    # # Clang Python bindings are installed by CMake
-    # (lib/site_packages).install llvmpath/"bindings/python/llvm"
-
-    # # Install Emacs modes
-    # elisp.install Dir[llvmpath/"utils/emacs/*.el"] + Dir[share/"clang/*.el"]
+    # Install Emacs modes
+    elisp.install Dir[llvmpath/"utils/emacs/*.el"] + Dir[share/"clang/*.el"]
   end
 
   def caveats
