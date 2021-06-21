@@ -35,7 +35,7 @@ class Flang < Formula
       -DFLANG_INCLUDE_TESTS=OFF
     ]
 
-    if build.with? "flang-new"
+    if build.head? || build.with?("flang-new")
       args += %W[
         -DFLANG_BUILD_NEW_DRIVER=ON
         -DCLANG_DIR=#{llvm_cmake_lib}/clang
