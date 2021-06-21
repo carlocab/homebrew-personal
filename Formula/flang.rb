@@ -19,10 +19,11 @@ class Flang < Formula
   depends_on "cmake" => :build
   depends_on "gcc" => :test # for gfortran
   depends_on "llvm"
-
   uses_from_macos "zlib"
 
   fails_with gcc: "5"
+  fails_with gcc: "6"
+  fails_with :gcc if OS.linux?
 
   def install
     llvm_cmake_lib = Formula["llvm"].opt_lib/"cmake"
