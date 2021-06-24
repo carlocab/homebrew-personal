@@ -11,10 +11,10 @@ class Unrar < Formula
   end
 
   bottle do
-    root_url "https://github.com/carlocab/homebrew-personal/releases/download/unrar-6.0.5"
-    sha256 cellar: :any,                 big_sur:      "ef3c8b89d82cb01ade1c5095907af009052fe02def16c9e641335943f09a8017"
-    sha256 cellar: :any,                 catalina:     "db7f67801ff43dd8640f31a0d82fa0d2e5a195573b76c3034822b39b6ce3edcb"
-    sha256 cellar: :any_skip_relocation, x86_64_linux: "6cdf679c528baebcd1fdcad865fd659507f56ea34d69251169e753415a8c851c"
+    root_url "https://github.com/carlocab/homebrew-personal/releases/download/unrar-6.0.7"
+    sha256 cellar: :any,                 big_sur:      "a306ffdfe6b7ca02fc1e3f101eb0b7b6178c215ed963ce63e3579cb1a452060a"
+    sha256 cellar: :any,                 catalina:     "bec06c616c940c9c928a3163d66593110eb8d736a1527c0a4a14bdb4cd48ec56"
+    sha256 cellar: :any_skip_relocation, x86_64_linux: "a6e5028ce092f36c96f1b79c3aebed25152a8b145af1c13cde25140d8b335039"
   end
 
   def install
