@@ -1,11 +1,10 @@
 class Flang < Formula
   desc "Fortran front end for LLVM"
   homepage "http://flang.llvm.org"
-  url "https://github.com/llvm/llvm-project/releases/download/llvmorg-12.0.0/flang-12.0.0.src.tar.xz"
-  sha256 "dc9420c9f55c6dde633f0f46fe3f682995069cc5247dfdef225cbdfdca79123a"
-  license "Apache-2.0"
-  revision 1
-  head "https://github.com/llvm/llvm-project.git"
+  url "https://github.com/llvm/llvm-project/releases/download/llvmorg-12.0.1/flang-12.0.1.src.tar.xz"
+  sha256 "4741c9a2c8bf28f098173ef4a55d440e015b8039b96ffbb1473fb553c7b4394f"
+  license "Apache-2.0" => { with: "LLVM-exception" }
+  head "https://github.com/llvm/llvm-project.git", branch: "main"
 
   bottle do
     root_url "https://github.com/carlocab/homebrew-personal/releases/download/flang-12.0.0_1"
@@ -35,6 +34,8 @@ class Flang < Formula
       -DFLANG_INCLUDE_TESTS=OFF
     ]
 
+    # Build by default when the following commit lands in a release:
+    # https://github.com/llvm/llvm-project/commit/97a71ae6259191c09de644c55deb4448a259a1b1
     if build.head? || build.with?("flang-new")
       args += %W[
         -DFLANG_BUILD_NEW_DRIVER=ON
