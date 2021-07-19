@@ -12,6 +12,11 @@ class ClangInstrumented < Formula
     regex(/LLVM (\d+\.\d+\.\d+)/i)
   end
 
+  bottle do
+    root_url "https://ghcr.io/v2/carlocab/personal"
+    sha256 cellar: :any_skip_relocation, x86_64_linux: "e5073c4321cbaeacfd56af1036ed4dbc35ebcc84ba4fdbba6b87b0cef892d016"
+  end
+
   # Clang cannot find system headers if Xcode CLT is not installed
   pour_bottle? only_if: :clt_installed
 
