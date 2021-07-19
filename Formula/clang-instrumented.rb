@@ -54,6 +54,9 @@ class ClangInstrumented < Formula
 
     sdk = MacOS.sdk_path_if_needed
     on_macos do
+      # Prevent linkage with LLVM libc++
+      ENV.remove "HOMEBREW_LIBRARY_PATHS", Formula["llvm"].opt_lib
+
       args << "-DLLVM_ENABLE_LIBCXX=ON"
       args << "-DRUNTIMES_CMAKE_ARGS=-DCMAKE_INSTALL_RPATH=#{rpath}"
       args << "-DDEFAULT_SYSROOT=#{sdk}" if sdk
@@ -87,7 +90,7 @@ class ClangInstrumented < Formula
     end
 
     begin
-      Timeout.timeout(20400) do # 5 hours and 40 minutes
+      Timeout.timeout(19200) do # 5 hours, 20 minutes
         # First, build an instrumented stage2 compiler using Homebrew clang
         llvmpath = buildpath/"llvm"
         mkdir llvmpath/"stage2" do
@@ -104,7 +107,7 @@ class ClangInstrumented < Formula
                           "-DCMAKE_CXX_COMPILER=#{llvm.opt_bin}/clang++",
                           "-DLLVM_BUILD_INSTRUMENTED=IR",
                           "-DLLVM_BUILD_RUNTIME=NO",
-                          "-DLLVM_PROFILE_DATA_DIR=#{pkgshare}/profiles",
+                          "-DLLVM_PROFILE_DATA_DIR=#{var}/llvm/profiles",
                           "-DCMAKE_C_FLAGS=#{instrumented_cflags.join(" ")}",
                           "-DCMAKE_CXX_FLAGS=#{instrumented_cxxflags.join(" ")}",
                           *args, *std_cmake_args
@@ -163,10 +166,11 @@ class ClangInstrumented < Formula
     end
 
     # Finally, merge the generated profile data
+    pkgshare.mkpath
     system "llvm-profdata",
            "merge",
            "-output=#{pkgshare}/pgo_profile.prof",
-           *Dir[pkgshare/"profiles/*.profraw"]
+           *Dir[var/"llvm/profiles/*.profraw"]
   end
 
   def caveats
