@@ -14,7 +14,10 @@ class ClangInstrumented < Formula
 
   bottle do
     root_url "https://ghcr.io/v2/carlocab/personal"
-    sha256 cellar: :any_skip_relocation, x86_64_linux: "e5073c4321cbaeacfd56af1036ed4dbc35ebcc84ba4fdbba6b87b0cef892d016"
+    rebuild 1
+    sha256 cellar: :any,                 big_sur:      "3657aed11575fb96dc1111be0658333d9c5ec027820fbf23ec4f672e93b159d1"
+    sha256 cellar: :any,                 catalina:     "8d7ef086ea8257e12ab39cbce0897bd30772ebe91da4339f1a6496f8d26e0be6"
+    sha256 cellar: :any_skip_relocation, x86_64_linux: "11afe2f0252a9a2ef105ac69c4398ddb5837680d9ab779831ee531e85640a13f"
   end
 
   # Clang cannot find system headers if Xcode CLT is not installed
