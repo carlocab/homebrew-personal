@@ -56,7 +56,7 @@ class ClangInstrumented < Formula
     ]
 
     sdk = MacOS.sdk_path_if_needed
-    if OS.mac? do
+    if OS.mac?
       # Prevent linkage with LLVM libc++
       ENV.remove "HOMEBREW_LIBRARY_PATHS", Formula["llvm"].opt_lib
 
@@ -65,7 +65,7 @@ class ClangInstrumented < Formula
       args << "-DDEFAULT_SYSROOT=#{sdk}" if sdk
     end
 
-    if OS.linux? do
+    if OS.linux?
       args << "-DLLVM_ENABLE_ZLIB=OFF"
       args << "-DLLVM_ENABLE_LIBXML2=OFF"
       args << "-DLLVM_ENABLE_TERMINFO=OFF"
