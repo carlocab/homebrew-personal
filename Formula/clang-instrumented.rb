@@ -130,7 +130,7 @@ class ClangInstrumented < Formula
         # Our just-built Clang needs a little help finding C++ headers,
         # since we don't build libc++, and the atomic and type_traits
         # headers are not in the SDK on macOS versions before Big Sur.
-        if OS.mac? do
+        if OS.mac?
           if MacOS.version <= :catalina && sdk
             toolchain_path = if MacOS::CLT.installed?
               MacOS::CLT::PKG_PATH
