@@ -56,7 +56,7 @@ class ClangInstrumented < Formula
     ]
 
     sdk = MacOS.sdk_path_if_needed
-    on_macos do
+    if OS.mac? do
       # Prevent linkage with LLVM libc++
       ENV.remove "HOMEBREW_LIBRARY_PATHS", Formula["llvm"].opt_lib
 
@@ -65,7 +65,7 @@ class ClangInstrumented < Formula
       args << "-DDEFAULT_SYSROOT=#{sdk}" if sdk
     end
 
-    on_linux do
+    if OS.linux? do
       args << "-DLLVM_ENABLE_ZLIB=OFF"
       args << "-DLLVM_ENABLE_LIBXML2=OFF"
       args << "-DLLVM_ENABLE_TERMINFO=OFF"
@@ -130,7 +130,7 @@ class ClangInstrumented < Formula
         # Our just-built Clang needs a little help finding C++ headers,
         # since we don't build libc++, and the atomic and type_traits
         # headers are not in the SDK on macOS versions before Big Sur.
-        on_macos do
+        if OS.mac? do
           if MacOS.version <= :catalina && sdk
             toolchain_path = if MacOS::CLT.installed?
               MacOS::CLT::PKG_PATH
