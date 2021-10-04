@@ -35,10 +35,12 @@ class LlvmAT13 < Formula
     depends_on "pkg-config" => :build
     depends_on "binutils" # needed for gold
     depends_on "elfutils" # openmp requires <gelf.h>
-    depends_on "gcc"
-  end
 
-  fails_with gcc: "5"
+    patch do
+      url "https://raw.githubusercontent.com/Homebrew/formula-patches/1c864e19e3bd9e42fe7405a6989ff629e1dd0f67/llvm/lldb-gcc-5.patch"
+      sha256 "d256925c812f96215bb69a860f69a04203fcd2b44d0c02d39f6b8bdec2f21bf2"
+    end
+  end
 
   def install
     projects = %w[
@@ -50,14 +52,15 @@ class LlvmAT13 < Formula
       polly
     ]
     runtimes = %w[
+      compiler-rt
       libcxx
       libcxxabi
       libunwind
     ]
     if OS.mac?
-      runtimes << "openmp" << "compiler-rt"
+      runtimes << "openmp"
     else
-      projects << "openmp" << "compiler-rt"
+      projects << "openmp"
     end
 
     py_ver = Language::Python.major_minor_version("python3")
@@ -135,6 +138,8 @@ class LlvmAT13 < Formula
       runtime_args = %w[
         -DLLVM_ENABLE_PER_TARGET_RUNTIME_DIR=OFF
         -DCMAKE_POSITION_INDEPENDENT_CODE=ON
+
+        -DCOMPILER_RT_DEFAULT_TARGET_ONLY=ON
 
         -DLIBCXX_ENABLE_STATIC_ABI_LIBRARY=ON
         -DLIBCXX_STATICALLY_LINK_ABI_IN_SHARED_LIBRARY=OFF
