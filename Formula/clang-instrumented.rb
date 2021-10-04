@@ -130,18 +130,16 @@ class ClangInstrumented < Formula
         # Our just-built Clang needs a little help finding C++ headers,
         # since we don't build libc++, and the atomic and type_traits
         # headers are not in the SDK on macOS versions before Big Sur.
-        if OS.mac?
-          if MacOS.version <= :catalina && sdk
-            toolchain_path = if MacOS::CLT.installed?
-              MacOS::CLT::PKG_PATH
-            else
-              MacOS::Xcode.toolchain_path
-            end
-
-            cxxflags << "-isystem#{toolchain_path}/usr/include/c++/v1"
-            cxxflags << "-isystem#{toolchain_path}/usr/include"
-            cxxflags << "-isystem#{sdk}/usr/include"
+        if OS.mac? && (MacOS.version <= :catalina && sdk)
+          toolchain_path = if MacOS::CLT.installed?
+            MacOS::CLT::PKG_PATH
+          else
+            MacOS::Xcode.toolchain_path
           end
+
+          cxxflags << "-isystem#{toolchain_path}/usr/include/c++/v1"
+          cxxflags << "-isystem#{toolchain_path}/usr/include"
+          cxxflags << "-isystem#{sdk}/usr/include"
         end
 
         args << "-DCMAKE_C_FLAGS=#{cflags.join(" ")}" unless cflags.empty?
