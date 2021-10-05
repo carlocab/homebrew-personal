@@ -15,8 +15,6 @@ class LlvmAT13 < Formula
   # Clang cannot find system headers if Xcode CLT is not installed
   pour_bottle? only_if: :clt_installed
 
-  keg_only :versioned_formula
-
   # https://llvm.org/docs/GettingStarted.html#requirement
   # We intentionally use Make instead of Ninja.
   # See: Homebrew/homebrew-core/issues/35513
@@ -139,8 +137,6 @@ class LlvmAT13 < Formula
         -DLLVM_ENABLE_PER_TARGET_RUNTIME_DIR=OFF
         -DCMAKE_POSITION_INDEPENDENT_CODE=ON
 
-        -DCOMPILER_RT_DEFAULT_TARGET_ONLY=ON
-
         -DLIBCXX_ENABLE_STATIC_ABI_LIBRARY=ON
         -DLIBCXX_STATICALLY_LINK_ABI_IN_SHARED_LIBRARY=OFF
         -DLIBCXX_STATICALLY_LINK_ABI_IN_STATIC_LIBRARY=ON
@@ -156,6 +152,9 @@ class LlvmAT13 < Formula
         -DLIBUNWIND_USE_COMPILER_RT=ON
       ]
       args << "-DRUNTIMES_CMAKE_ARGS=#{runtime_args.join(";")}"
+
+      # Don't build i386 targets; this isn't portable.
+      args << "-DBUILTINS_CMAKE_ARGS=-DCOMPILER_RT_DEFAULT_TARGET_ONLY=ON"
     end
 
     llvmpath = buildpath/"llvm"
