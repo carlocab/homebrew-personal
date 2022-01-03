@@ -12,9 +12,8 @@ class Unrar < Formula
 
   bottle do
     root_url "https://ghcr.io/v2/carlocab/personal"
-    sha256 cellar: :any,                 big_sur:      "a306ffdfe6b7ca02fc1e3f101eb0b7b6178c215ed963ce63e3579cb1a452060a"
-    sha256 cellar: :any,                 catalina:     "bec06c616c940c9c928a3163d66593110eb8d736a1527c0a4a14bdb4cd48ec56"
-    sha256 cellar: :any_skip_relocation, x86_64_linux: "a6e5028ce092f36c96f1b79c3aebed25152a8b145af1c13cde25140d8b335039"
+    sha256 cellar: :any,                 big_sur:      "b121f218138895ba6e70fc725ffb72fd21e00e5c021f0b66ca213c2b25e66ea0"
+    sha256 cellar: :any_skip_relocation, x86_64_linux: "c2bc827479e14c5b6b8462631e6fd182c6c5da407f7fdb03e9f7297f64512073"
   end
 
   def install
