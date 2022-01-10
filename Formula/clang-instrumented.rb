@@ -36,7 +36,6 @@ class ClangInstrumented < Formula
   depends_on "python@3.9" => :build
 
   on_linux do
-    depends_on "glibc" if Formula["glibc"].any_version_installed?
     depends_on "pkg-config" => :build
     depends_on "binutils" # needed for gold
   end
