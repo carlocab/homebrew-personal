@@ -17,11 +17,12 @@ jobs:
         run: brew uninstall --cask julia
 
       - name: Install Julia formula
-        run: brew install julia
+        run: brew install --formula julia
 
       - name: Run tests
         run: |
-          julia -e 'include(joinpath(Sys.BINDIR, Base.DATAROOTDIR, "julia", "test", "choosetests.jl")); \
+          JULIA="$(brew --prefix julia)/bin/julia"
+          $JULIA -e 'include(joinpath(Sys.BINDIR, Base.DATAROOTDIR, "julia", "test", "choosetests.jl")); \
             Base.runtests(append!(choosetests()[1], ["LibGit2/online", "download"]); ncores=Sys.CPU_THREADS)'
 
       # - run: julia -e 'Base.runtests("all"; ncores=Sys.CPU_THREADS)'
