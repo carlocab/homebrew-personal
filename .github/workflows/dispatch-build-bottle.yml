@@ -61,10 +61,9 @@ jobs:
 
       - name: Set up Homebrew
         id: set-up-homebrew
-        if: runner.os == 'macOS'
         uses: Homebrew/actions/setup-homebrew@master
 
-      - if: runner.os == 'macOS'
+      - name: Run `brew test-bot --only-cleanup-before`
         run: brew test-bot --only-cleanup-before
 
       - name: Run brew test-bot --only-setup
