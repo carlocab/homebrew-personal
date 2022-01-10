@@ -76,7 +76,7 @@ jobs:
           # Fix working directory permissions
           docker exec --user root ${{github.sha}} chmod 777 /tmp/bottles
 
-          docker exec --workdir "$TAP_PATH" ${{github.sha}} git remote set-url origin ${{github.event.repository.html_url}}
+          docker exec --workdir "$TAP_PATH" ${{github.sha}} git remote set-url origin https://github.com/Homebrew/homebrew-core.git
           docker exec --workdir "$TAP_PATH" ${{github.sha}} git fetch origin ${{github.sha}} '+refs/heads/*:refs/remotes/origin/*'
           docker exec --workdir "$TAP_PATH" ${{github.sha}} git remote set-head origin --auto
           docker exec --workdir "$TAP_PATH" ${{github.sha}} git checkout --force -B master FETCH_HEAD
