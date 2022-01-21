@@ -15,11 +15,9 @@ class Flang < Formula
 
   option "with-ninja", "Build with `ninja` instead of `make`"
   option "without-flang-new", "Disable the new Flang driver"
-  option "with-test", "Enable build-time tests"
 
   depends_on "cmake" => :build
-  depends_on "lit" => :build
-  depends_on "ninja" => :build
+  depends_on "ninja" => :build if build.with?("ninja")
   depends_on "gcc" => :test # for gfortran
   depends_on "bash" # `flang` script uses `local -n`
   depends_on "llvm"
@@ -41,8 +39,7 @@ class Flang < Formula
       -DMLIR_DIR=#{llvm_cmake_lib}/mlir
       -DCLANG_DIR=#{llvm_cmake_lib}/clang
       -DFLANG_BUILD_NEW_DRIVER=#{build.with?("flang-new") ? "ON" : "OFF"}
-      -DFLANG_INCLUDE_TESTS=#{build.with?("test") ? "ON" : "OFF"}
-      -DLLVM_EXTERNAL_LIT=#{Formula["lit"].opt_bin/"lit"}
+      -DFLANG_INCLUDE_TESTS=OFF
       -DLLVM_ENABLE_ZLIB=ON
     ]
 
@@ -52,17 +49,6 @@ class Flang < Formula
                     "-S", source, "-B", "build",
                     *std_cmake_args, *args
     system "cmake", "--build", "build"
-
-    # Reconfigure to evade the shims which break the test suite
-    if build.with? "test"
-      system "cmake", "-G", cmake_generator,
-                      "-S", source, "-B", "build",
-                      "-DCMAKE_C_COMPILER=#{DevelopmentTools.locate(ENV.cc)}",
-                      "-DCMAKE_CXX_COMPILER=#{DevelopmentTools.locate(ENV.cxx)}",
-                      *std_cmake_args, *args
-      system "cmake", "--build", "build", "--target", "check-all"
-    end
-
     system "cmake", "--install", "build"
   end
 
