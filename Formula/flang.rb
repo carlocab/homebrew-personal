@@ -8,9 +8,10 @@ class Flang < Formula
 
   bottle do
     root_url "https://ghcr.io/v2/carlocab/personal"
-    sha256 cellar: :any,                 big_sur:      "90f74d6c4df829bb93f6affcc63836d6036ce475ea249082cc4bd94112166955"
-    sha256 cellar: :any,                 catalina:     "714f547d882e944af211bea3cc5ba567f77820861d1b3883f5ed0b01eb6b1128"
-    sha256 cellar: :any_skip_relocation, x86_64_linux: "0dee756d8679676a0d8f9ca99ef9944cf3dbcf47edd8c466ab15dbf09339490f"
+    sha256 cellar: :any,                 monterey:     "7287a85c68d694728ea4590ad984372171b270790bb8c42f73f64ad4b4b2ea51"
+    sha256 cellar: :any,                 big_sur:      "d0fb48e06cd899a6160744bf3d4db6705aff5a37800be117c156158d1a2b39a5"
+    sha256 cellar: :any,                 catalina:     "408878fa4c14121c404691ae215cb9ec0087c1072bf807f1509149d2e17e0c2c"
+    sha256 cellar: :any_skip_relocation, x86_64_linux: "89b6b575df7fcc31081dedcd67f2b28f26f972d288fa5862054bb534eeb36765"
   end
 
   option "with-ninja", "Build with `ninja` instead of `make`"
