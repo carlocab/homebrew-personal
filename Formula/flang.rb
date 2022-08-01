@@ -1,8 +1,8 @@
 class Flang < Formula
   desc "Fortran front end for LLVM"
-  homepage "http://flang.llvm.org"
-  url "https://github.com/llvm/llvm-project/releases/download/llvmorg-13.0.0/flang-13.0.0.src.tar.xz"
-  sha256 "13bc580342bec32b6158c8cddeb276bd428d9fc8fd23d13179c8aa97bbba37d5"
+  homepage "https://flang.llvm.org"
+  url "https://github.com/llvm/llvm-project/releases/download/llvmorg-14.0.6/flang-14.0.6.src.tar.xz"
+  sha256 "e225b889c7188e693aea9dd4503c362be539b4b757e358fb7d659eddc470c7ba"
   license "Apache-2.0" => { with: "LLVM-exception" }
   head "https://github.com/llvm/llvm-project.git", branch: "main"
 
@@ -18,14 +18,18 @@ class Flang < Formula
 
   depends_on "cmake" => :build
   depends_on "ninja" => :build if build.with?("ninja")
-  depends_on "gcc" => :test # for gfortran
   depends_on "bash" # `flang` script uses `local -n`
+  depends_on "gcc" # for gfortran
   depends_on "llvm"
   uses_from_macos "zlib"
 
+  # We need to compile with Homebrew GCC 11.
   fails_with gcc: "5"
   fails_with gcc: "6"
-  fails_with :gcc if OS.linux?
+  fails_with gcc: "7"
+  fails_with gcc: "8"
+  fails_with gcc: "9"
+  fails_with gcc: "10"
 
   def llvm
     deps.map(&:to_formula)
@@ -43,21 +47,13 @@ class Flang < Formula
       -DLLVM_ENABLE_ZLIB=ON
     ]
 
-    source = build.head? ? "flang" : "."
+    source = build.head? ? "flang" : "flang-#{version}.src"
     cmake_generator = build.with?("ninja") ? "Ninja" : "Unix Makefiles"
     system "cmake", "-G", cmake_generator,
                     "-S", source, "-B", "build",
-                    *std_cmake_args, *args
+                    *args, *std_cmake_args
     system "cmake", "--build", "build"
     system "cmake", "--install", "build"
-  end
-
-  def caveats
-    <<~EOS
-      Flang currently requires an external Fortran compiler to compile
-      and link Fortran source files. You can install one with
-        brew install gcc
-    EOS
   end
 
   test do
