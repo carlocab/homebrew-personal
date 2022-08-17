@@ -67,19 +67,18 @@ class Flang < Formula
       ENDPROGRAM
     EOS
 
-    # FIXME: OpenMP seems broken for some reason.
-    # expected_result = <<~EOS
-    #   Hello from thread 0, nthreads 4
-    #   Hello from thread 1, nthreads 4
-    #   Hello from thread 2, nthreads 4
-    #   Hello from thread 3, nthreads 4
-    # EOS
+    expected_result = <<~EOS
+      Hello from thread 0, nthreads 4
+      Hello from thread 1, nthreads 4
+      Hello from thread 2, nthreads 4
+      Hello from thread 3, nthreads 4
+    EOS
 
-    # system bin/"flang", "-fopenmp", "omptest.f90", "-o", "omptest"
-    # testresult = shell_output("./omptest")
+    system bin/"flang", "-fopenmp", "omptest.f90", "-o", "omptest"
+    testresult = shell_output("./omptest")
 
-    # sorted_testresult = testresult.split("\n").sort.join("\n")
-    # assert_equal expected_result.strip, sorted_testresult.strip
+    sorted_testresult = testresult.split("\n").sort.join("\n")
+    assert_equal expected_result.strip, sorted_testresult.strip
 
     (testpath/"test.f90").write <<~EOS
       PROGRAM test
