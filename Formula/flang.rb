@@ -1,8 +1,8 @@
 class Flang < Formula
   desc "Fortran front end for LLVM"
   homepage "https://flang.llvm.org"
-  url "https://github.com/llvm/llvm-project/releases/download/llvmorg-14.0.6/flang-14.0.6.src.tar.xz"
-  sha256 "e225b889c7188e693aea9dd4503c362be539b4b757e358fb7d659eddc470c7ba"
+  url "https://github.com/llvm/llvm-project/releases/download/llvmorg-15.0.0/llvm-project-15.0.0.src.tar.xz"
+  sha256 "caaf8100365b6ebafc39fea803e902ca3ff38b4d5327b9927097808d32964db7"
   license "Apache-2.0" => { with: "LLVM-exception" }
   head "https://github.com/llvm/llvm-project.git", branch: "main"
 
@@ -15,7 +15,6 @@ class Flang < Formula
   end
 
   option "with-ninja", "Build with `ninja` instead of `make`"
-  option "without-flang-new", "Disable the new Flang driver"
 
   depends_on "cmake" => :build
   depends_on "ninja" => :build if build.with?("ninja")
@@ -23,14 +22,6 @@ class Flang < Formula
   depends_on "gcc" # for gfortran
   depends_on "llvm"
   uses_from_macos "zlib"
-
-  # We need to compile with Homebrew GCC 11.
-  fails_with gcc: "5"
-  fails_with gcc: "6"
-  fails_with gcc: "7"
-  fails_with gcc: "8"
-  fails_with gcc: "9"
-  fails_with gcc: "10"
 
   def llvm
     deps.map(&:to_formula)
@@ -43,15 +34,20 @@ class Flang < Formula
       -DLLVM_DIR=#{llvm_cmake_lib}/llvm
       -DMLIR_DIR=#{llvm_cmake_lib}/mlir
       -DCLANG_DIR=#{llvm_cmake_lib}/clang
-      -DFLANG_BUILD_NEW_DRIVER=#{build.with?("flang-new") ? "ON" : "OFF"}
       -DFLANG_INCLUDE_TESTS=OFF
       -DLLVM_ENABLE_ZLIB=ON
     ]
 
-    source = build.head? ? "flang" : "flang-#{version}.src"
+    if OS.mac?
+      # Apple `ld` does not like the LTOed object files in LLVM.
+      %w[exe shared module].each do |type|
+        args << "-DCMAKE_#{type.upcase}_LINKER_FLAGS=-fuse-ld=lld"
+      end
+    end
+
     cmake_generator = build.with?("ninja") ? "Ninja" : "Unix Makefiles"
     system "cmake", "-G", cmake_generator,
-                    "-S", source, "-B", "build",
+                    "-S", "flang", "-B", "build",
                     *args, *std_cmake_args
     system "cmake", "--build", "build"
     system "cmake", "--install", "build"
