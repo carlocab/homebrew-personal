@@ -1,18 +1,17 @@
 name: brew test-bot
 on:
   push:
-    branches: main
+    branches: [main]
   pull_request:
 env:
   HOMEBREW_DEVELOPER: 1
   HOMEBREW_GITHUB_ACTIONS: 1
   HOMEBREW_NO_AUTO_UPDATE: 1
-  HOMEBREW_RELOCATE_RPATHS: 1
 jobs:
   test-bot:
     strategy:
       matrix:
-        os: [macos-10.15, macos-11, macOS-12, ubuntu-latest]
+        os: [macos-10.15, macos-11, macOS-12, ubuntu-22.04]
       fail-fast: false
     runs-on: ${{ matrix.os }}
     steps:
