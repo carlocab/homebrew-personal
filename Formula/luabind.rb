@@ -5,13 +5,9 @@ class Luabind < Formula
   sha256 "80de5e04918678dd8e6dac3b22a34b3247f74bf744c719bae21faaa49649aaae"
   license "MIT"
 
-  livecheck do
-    url :stable
-  end
-
   depends_on "boost-build" => :build
   depends_on "boost"
-  depends_on "lua@5.1"
+  depends_on "luajit"
 
   # boost 1.57 compatibility
   # https://github.com/Homebrew/homebrew/pull/33890#issuecomment-67723688
@@ -41,17 +37,23 @@ class Luabind < Formula
   end
 
   def install
-    ENV["LUA_PATH"] = Formula["lua@5.1"].opt_prefix
+    ENV["LUA_PATH"] = Formula["luajit"].opt_prefix
+
+    # Find LuaJIT instead of Lua 5.1.
+    inreplace "Jamroot" do |s|
+      s.gsub! "include/lua5.1", "include/luajit-2.1"
+      s.gsub! "liblua5.1", "libluajit-5.1"
+    end
 
     args = %w[release install]
     case ENV.compiler
     when :clang
       args << "--toolset=clang"
     when :gcc
-      args << "--toolset=darwin"
+      args << "--toolset=darwin" if OS.mac?
     end
     args << "--prefix=#{prefix}"
-    system "bjam", *args
+    system "b2", *args
 
     (lib/"pkgconfig/luabind.pc").write pc_file
   end
@@ -90,11 +92,11 @@ class Luabind < Formula
           return 0;
       }
     EOS
-    system ENV.cxx, "-shared", "hello.cpp", "-o", "hello.dylib",
-                    "-I#{Formula["lua@5.1"].include}/lua-5.1",
+    system ENV.cxx, "-fPIC", "-shared", "hello.cpp", "-o", shared_library("hello"),
+                    "-I#{Formula["luajit"].include}/luajit-2.1",
                     "-L#{lib}", "-lluabind",
-                    "-L#{Formula["lua@5.1"].lib}", "-llua5.1"
-    output = `lua5.1 -e "package.loadlib('#{testpath}/hello.dylib', 'init')(); greet()"`
-    assert_match "hello world!", output
+                    "-L#{Formula["luajit"].lib}", "-lluajit-5.1"
+    output = shell_output("luajit -e \"package.loadlib('#{testpath/shared_library("hello")}', 'init')(); greet()\"")
+    assert_equal "hello world!", output.chomp
   end
 end
