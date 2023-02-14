@@ -5,6 +5,14 @@ class Luabind < Formula
   sha256 "80de5e04918678dd8e6dac3b22a34b3247f74bf744c719bae21faaa49649aaae"
   license "MIT"
 
+  bottle do
+    root_url "https://ghcr.io/v2/carlocab/personal"
+    rebuild 1
+    sha256 cellar: :any,                 monterey:     "06a8411e67e591fb2cbd0d9f10fefe4fe9779304ba6477ce8904e0d72d76a66f"
+    sha256 cellar: :any,                 big_sur:      "47af9f86f418b304d9737f61d08271e24303fd206ef4192e50ab0b9f764f322b"
+    sha256 cellar: :any_skip_relocation, x86_64_linux: "f78c722ea3ebbece88ffd484be85120830e6a79b78a482d7328756bd78e65465"
+  end
+
   depends_on "boost-build" => :build
   depends_on "boost"
   depends_on "luajit"
