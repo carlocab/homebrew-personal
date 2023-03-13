@@ -32,6 +32,15 @@ class Aarch64AppleDarwinGcc < Formula
   end
 
   def install
+    ["as", "ld"].each do |tool|
+      (buildpath/"#{target}-#{tool}").write <<~SH
+        #!/usr/bin/env sh
+        exec /usr/bin/#{tool} -arch arm64 "$@"
+      SH
+      chmod "+x", tool
+      bin.install tool
+    end
+
     mkdir "#{target}-gcc-build" do
       system "../configure", "--target=#{target}",
                              "--prefix=#{prefix}",
@@ -41,8 +50,9 @@ class Aarch64AppleDarwinGcc < Formula
                              "--with-mpc=#{Formula["libmpc"].opt_prefix}",
                              "--with-isl=#{Formula["isl"].opt_prefix}",
                              "--with-zstd=#{Formula["zstd"].opt_prefix}",
-                             "--with-as=/usr/bin/as -arch arm64",
-                             "--with-ld=/usr/bin/ld -arch arm64",
+                             "--with-as=#{bin/target}-as",
+                             "--with-ld=#{bin/target}-ld",
+                             "--with-sysroot=#{MacOS.sdk_path_if_needed}",
                              "--disable-nls",
                              "--enable-languages=c,c++"
 
