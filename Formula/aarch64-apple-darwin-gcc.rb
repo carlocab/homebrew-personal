@@ -41,6 +41,8 @@ class Aarch64AppleDarwinGcc < Formula
                              "--with-mpc=#{Formula["libmpc"].opt_prefix}",
                              "--with-isl=#{Formula["isl"].opt_prefix}",
                              "--with-zstd=#{Formula["zstd"].opt_prefix}",
+                             "--with-as=/usr/bin/as -arch arm64",
+                             "--with-ld=/usr/bin/ld -arch arm64",
                              "--disable-nls",
                              "--enable-languages=c,c++"
 
