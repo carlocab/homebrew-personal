@@ -43,8 +43,11 @@ class Aarch64AppleDarwinGcc < Formula
                              "--with-zstd=#{Formula["zstd"].opt_prefix}",
                              "--disable-nls",
                              "--enable-languages=c,c++"
-      system "make"
-      system "make", "install"
+
+      system "make", "all-gcc"
+      system "make", "install-gcc"
+      system "make", "all-target-libgcc"
+      system "make", "install-target-libgcc"
 
       # FSF-related man pages may conflict with native gcc
       (share/"man/man7").rmtree
