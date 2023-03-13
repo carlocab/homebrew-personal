@@ -33,12 +33,13 @@ class Aarch64AppleDarwinGcc < Formula
 
   def install
     ["as", "ld"].each do |tool|
-      (buildpath/"#{target}-#{tool}").write <<~SH
+      script = "#{target}-#{tool}"
+      (buildpath/script).write <<~SH
         #!/usr/bin/env sh
         exec /usr/bin/#{tool} -arch arm64 "$@"
       SH
-      chmod "+x", tool
-      bin.install tool
+      chmod "+x", script
+      bin.install script
     end
 
     mkdir "#{target}-gcc-build" do
