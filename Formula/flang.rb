@@ -1,8 +1,8 @@
 class Flang < Formula
   desc "Fortran front end for LLVM"
   homepage "https://flang.llvm.org"
-  url "https://github.com/llvm/llvm-project/releases/download/llvmorg-14.0.6/flang-14.0.6.src.tar.xz"
-  sha256 "e225b889c7188e693aea9dd4503c362be539b4b757e358fb7d659eddc470c7ba"
+  url "https://github.com/llvm/llvm-project/releases/download/llvmorg-16.0.6/flang-16.0.6.src.tar.xz"
+  sha256 "0a15d253d0d81c6f4619cd834f7a934e6ae69cfc74eeed9ba3c8372648253017"
   license "Apache-2.0" => { with: "LLVM-exception" }
   head "https://github.com/llvm/llvm-project.git", branch: "main"
 
