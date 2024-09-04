@@ -8,9 +8,10 @@ class Libwhich < Formula
 
   bottle do
     root_url "https://ghcr.io/v2/carlocab/personal"
-    sha256 cellar: :any_skip_relocation, big_sur:      "a43faeef4fe0d6884d7f6b83f78f1dd5c724cbac574361c689086334b0722f64"
-    sha256 cellar: :any_skip_relocation, catalina:     "279c630cfddf07d58d9c98e0208c6f02f452176585f8d30e3009b8886e32ff02"
-    sha256 cellar: :any_skip_relocation, x86_64_linux: "6633347026a69c78afc5eb57d2fb22c4f2cd01fed72b412d9b02030e1728e22c"
+    sha256 cellar: :any_skip_relocation, arm64_sonoma: "f894b78904dc4df92d137e0d13033b827a53876838f9130c989c9cf6db8a5b29"
+    sha256 cellar: :any_skip_relocation, ventura:      "3bc4295c6e3c148d30ee8b6e6cb613ab36cbbcef5083873776f9c57093c02222"
+    sha256 cellar: :any_skip_relocation, monterey:     "8bddfa1aa39e024f6768c03a456ac61d3f488c3c348e461e1a836f1f5fd391d9"
+    sha256 cellar: :any_skip_relocation, x86_64_linux: "a55b7b93beffa1a446572913d8463811e23748ec880b85a93a06c68a7c30ef0c"
   end
 
   on_linux do
