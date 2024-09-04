@@ -1,7 +1,7 @@
 class Gllvm < Formula
   desc "Whole Program LLVM: wllvm ported to go"
   homepage "https://github.com/SRI-CSL/gllvm/"
-  url "https://github.com/SRI-CSL/gllvm/archive/v1.3.0.tar.gz"
+  url "https://github.com/SRI-CSL/gllvm/archive/refs/tags/v1.3.0.tar.gz"
   sha256 "e8bcb9b93bc2d24283fe45f16891ec5d70116b5fc49144a9c98832ed074f8782"
   license "BSD-3-Clause"
 
