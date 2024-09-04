@@ -51,10 +51,10 @@ class Unrar < Formula
             "QUMBIApIEAAGRpcmVjdG9yeVxmaWxlLnR4dEhvbWVicmV3CsQ9ewBABwA="
 
     rarpath.write data.unpack1("m")
-    assert_equal contentpath, `#{bin}/unrar lb #{rarpath}`.strip
+    assert_equal contentpath, shell_output("#{bin}/unrar lb #{rarpath}").strip
     assert_equal 0, $CHILD_STATUS.exitstatus
 
     system "#{bin}/unrar", "x", rarpath, testpath
-    assert_equal "Homebrew\n", (testpath/contentpath).read
+    assert_equal "Homebrew", (testpath/contentpath).read.chomp
   end
 end
