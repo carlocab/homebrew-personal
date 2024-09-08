@@ -25,6 +25,20 @@ jobs:
           key: ${{ matrix.os }}-rubygems-${{ steps.set-up-homebrew.outputs.gems-hash }}
           restore-keys: ${{ matrix.os }}-rubygems-
 
+      - shell: brew ruby {0}
+        run: |
+          bottle_revision = "67de30ee374fa9c69bc43cf0223a97a67f56009f"
+          bottle_header = "Installed previously built bottle for manticoresearch from"
+          bottle_message = "67de30ee374 (Merge pull request #183780 from Homebrew/manticoresearch-6.3.6, 2024-09-08)\n\n"
+          puts GitHub::Actions::Annotation.new(
+            :notice,
+            bottle_message,
+            title: bottle_header,
+          )
+
+      - run: |
+          echo "::notice title=hello!: ::this is a test"
+
       - run: brew test-bot --only-cleanup-before
 
       - run: brew test-bot --only-setup
