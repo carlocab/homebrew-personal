@@ -4,7 +4,7 @@ jobs:
   test-julia:
     strategy:
       matrix:
-        os: [macos-11.0, macOS-latest, ubuntu-latest]
+        os: [macos-12, macos-13, macos-14, ubuntu-latest]
       fail-fast: false
     runs-on: ${{ matrix.os }}
     steps:
