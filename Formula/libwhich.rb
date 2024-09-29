@@ -14,9 +14,7 @@ class Libwhich < Formula
     sha256 cellar: :any_skip_relocation, x86_64_linux: "a55b7b93beffa1a446572913d8463811e23748ec880b85a93a06c68a7c30ef0c"
   end
 
-  on_linux do
-    depends_on "gnu-sed" => :test
-  end
+  depends_on "gnu-sed" => :test
 
   def install
     system "make"
@@ -26,11 +24,7 @@ class Libwhich < Formula
   end
 
   test do
-    assert_equal "/usr/lib/libSystem.B.dylib", shell_output("#{bin}/libwhich -p libSystem.B.dylib") if OS.mac?
-    return unless OS.linux?
-
     ENV.prepend_path "PATH", Formula["gnu-sed"].opt_libexec/"gnubin"
-    system ENV.cc, "-o", shared_library("libz"), "-shared", "-x", "c", "/dev/null"
     system libexec/"test-libwhich.sh"
   end
 end
