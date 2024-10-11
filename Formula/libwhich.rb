@@ -19,8 +19,8 @@ class Libwhich < Formula
   depends_on "gnu-sed" => :test
 
   def install
-    system "make"
-    bin.install "libwhich"
+    ENV.append "LDFLAGS", "-Wl,-rpath,#{rpath(target: HOMEBREW_PREFIX/"lib")}"
+    system "make", "prefix=#{prefix}", "install"
     inreplace "test-libwhich.sh", "./libwhich", "#{bin}/libwhich"
     libexec.install "test-libwhich.sh"
   end
