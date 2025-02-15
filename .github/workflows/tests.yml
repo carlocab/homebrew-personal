@@ -26,7 +26,7 @@ jobs:
         if: matrix.bootstrap
         run: |
           apt-get update
-          apt-get install -y --no-install-recommends curl git g++ make gawk patch
+          apt-get install -y --no-install-recommends curl git g++ make gawk patch acl
           mkdir -p /home/linuxbrew/.linuxbrew/bin
           git clone https://github.com/Homebrew/brew /home/linuxbrew/.linuxbrew/Homebrew
           ln -s ../Homebrew/bin/brew /home/linuxbrew/.linuxbrew/bin/brew
@@ -35,6 +35,8 @@ jobs:
       - name: Set up Homebrew
         id: set-up-homebrew
         uses: Homebrew/actions/setup-homebrew@master
+        with:
+          core: ${{ matrix.bootstrap }}
 
       - name: Cache Homebrew Bundler RubyGems
         uses: actions/cache@v4
@@ -50,6 +52,12 @@ jobs:
 
       - run: brew test-bot --only-tap-syntax
         if: ${{ !matrix.bootstrap }}
+
+      - run: |
+          sed -i 's/def install/def install\n    ENV["FORCE_UNSAFE_CONFIGURE"] = "1"/' "$(brew --repo homebrew/core)/Formula/g/gnu-tar.rb"
+          export HOMEBREW_NO_INSTALL_FROM_API=1
+          brew deps --include-build --topological gnu-tar | xargs brew install --build-from-source gnu-tar
+        if: matrix.bootstrap
 
       - run: brew test-bot --only-formulae --only-json-tab --root-url="https://ghcr.io/v2/carlocab/personal"
         if: github.event_name == 'pull_request'
