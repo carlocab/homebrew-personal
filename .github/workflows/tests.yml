@@ -10,10 +10,28 @@ jobs:
   test-bot:
     strategy:
       matrix:
-        os: [ubuntu-22.04, macos-12, macos-13, macos-14, macos-15]
+        include:
+          - os: macos-13
+          - os: macos-14
+          - os: macos-15
+          - os: ubuntu-22.04
+          - os: ubuntu-22.04-arm
+            container: '{"image": "rubylang/ruby:3.3.7-jammy"}'
+            bootstrap: true
       fail-fast: false
     runs-on: ${{ matrix.os }}
+    container: ${{ matrix.container && fromJSON(matrix.container) || '' }}
     steps:
+      - name: Bootstrap
+        if: matrix.bootstrap
+        run: |
+          apt-get update
+          apt-get install -y --no-install-recommends curl git g++ make gawk patch
+          mkdir -p /home/linuxbrew/.linuxbrew/bin
+          git clone https://github.com/Homebrew/brew /home/linuxbrew/.linuxbrew/Homebrew
+          ln -s ../Homebrew/bin/brew /home/linuxbrew/.linuxbrew/bin/brew
+          echo "/home/linuxbrew/.linuxbrew/bin" >>"${GITHUB_PATH}"
+
       - name: Set up Homebrew
         id: set-up-homebrew
         uses: Homebrew/actions/setup-homebrew@master
@@ -28,8 +46,10 @@ jobs:
       - run: brew test-bot --only-cleanup-before
 
       - run: brew test-bot --only-setup
+        continue-on-error: ${{ matrix.bootstrap }}
 
       - run: brew test-bot --only-tap-syntax
+        if: ${{ !matrix.bootstrap }}
 
       - run: brew test-bot --only-formulae --only-json-tab --root-url="https://ghcr.io/v2/carlocab/personal"
         if: github.event_name == 'pull_request'
