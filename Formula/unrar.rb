@@ -12,11 +12,11 @@ class Unrar < Formula
 
   bottle do
     root_url "https://ghcr.io/v2/carlocab/personal"
-    sha256 cellar: :any,                 arm64_sequoia: "722fc8feb62166154794e1a2c360f17720b0820c3d2a7afbb6e19e11ca5ec9f9"
-    sha256 cellar: :any,                 arm64_sonoma:  "c7e117b0488d86217814cf0efd34db3c17b3a1fc132f45935a7ced137ba9c33a"
-    sha256 cellar: :any_skip_relocation, arm64_linux:   "5574b29df97ae259bada086b737b8d4e6e14348b09161e8ccad2911335ce7d80"
-    sha256 cellar: :any,                 ventura:       "fb6fbf52e4e73ec54171d9ba9677ecc00d950993ef19cc11c0014b74955aad1f"
-    sha256 cellar: :any_skip_relocation, x86_64_linux:  "061bfb66ee9e2294a13f5b97a6a97a188dba6454af59e47338fa1b262df57e3b"
+    sha256 cellar: :any,                 arm64_sequoia: "1a57e04052f4bae4172d546a7927c645fc29d2ef5fafbec19d08ee1dddc542fb"
+    sha256 cellar: :any,                 arm64_sonoma:  "a58cf9af5d04d3d5709b5337f3793586087a79e178da51d1f3978c0c13b8cf34"
+    sha256 cellar: :any,                 ventura:       "6d8b90b2cbb31dcb78394c6540f5454cd57232fc309921173814f880e63718f0"
+    sha256 cellar: :any_skip_relocation, x86_64_linux:  "cd5faac2834ba79e39429b9aac99e4f69d6e6023cbb1cbcd0b62e94cfc69bb2a"
+    sha256 cellar: :any_skip_relocation, arm64_linux:   "457d3e9bd0c287483e27f29a488a18c90e1f55be076fc49b07942ef396c419be"
   end
 
   def install
