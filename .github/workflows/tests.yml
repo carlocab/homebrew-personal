@@ -15,28 +15,18 @@ jobs:
           - os: macos-14
           - os: macos-15
           - os: ubuntu-22.04
+            container: '{"image": "ghcr.io/homebrew/ubuntu22.04:master"}'
           - os: ubuntu-22.04-arm
-            container: '{"image": "rubylang/ruby:3.3.7-jammy"}'
-            bootstrap: true
+            container: '{"image": "ghcr.io/homebrew/ubuntu22.04:master"}'
       fail-fast: false
     runs-on: ${{ matrix.os }}
     container: ${{ matrix.container && fromJSON(matrix.container) || '' }}
     steps:
-      - name: Bootstrap
-        if: matrix.bootstrap
-        run: |
-          apt-get update
-          apt-get install -y --no-install-recommends curl git g++ make gawk patch acl
-          mkdir -p /home/linuxbrew/.linuxbrew/bin
-          git clone https://github.com/Homebrew/brew /home/linuxbrew/.linuxbrew/Homebrew
-          ln -s ../Homebrew/bin/brew /home/linuxbrew/.linuxbrew/bin/brew
-          echo "/home/linuxbrew/.linuxbrew/bin" >>"${GITHUB_PATH}"
-
       - name: Set up Homebrew
         id: set-up-homebrew
         uses: Homebrew/actions/setup-homebrew@master
         with:
-          core: ${{ matrix.bootstrap }}
+          core: ${{ matrix.os == 'ubuntu-22.04-arm' }}
 
       - name: Cache Homebrew Bundler RubyGems
         uses: actions/cache@v4
@@ -48,16 +38,15 @@ jobs:
       - run: brew test-bot --only-cleanup-before
 
       - run: brew test-bot --only-setup
-        continue-on-error: ${{ matrix.bootstrap }}
+        continue-on-error: ${{ matrix.os == 'ubuntu-22.04-arm' }}
 
       - run: brew test-bot --only-tap-syntax
-        if: ${{ !matrix.bootstrap }}
+        if: matrix.os != 'ubuntu-22.04-arm'
 
       - run: |
-          sed -i 's/def install/def install\n    ENV["FORCE_UNSAFE_CONFIGURE"] = "1"/' "$(brew --repo homebrew/core)/Formula/g/gnu-tar.rb"
           export HOMEBREW_NO_INSTALL_FROM_API=1
           brew deps --include-build --topological gnu-tar | xargs brew install --build-from-source gnu-tar
-        if: matrix.bootstrap
+        if: matrix.os == 'ubuntu-22.04-arm'
 
       - run: brew test-bot --only-formulae --only-json-tab --root-url="https://ghcr.io/v2/carlocab/personal"
         if: github.event_name == 'pull_request'
