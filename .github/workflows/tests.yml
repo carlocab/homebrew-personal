@@ -43,10 +43,10 @@ jobs:
       - run: brew test-bot --only-tap-syntax
         if: matrix.os != 'ubuntu-22.04-arm'
 
-      - run: |
-          export HOMEBREW_NO_INSTALL_FROM_API=1
-          brew deps --include-build --topological gnu-tar | xargs brew install --build-from-source gnu-tar
+      - run: brew deps --include-build --topological gnu-tar | xargs brew install --build-from-source gnu-tar
         if: matrix.os == 'ubuntu-22.04-arm'
+        env:
+          HOMEBREW_NO_INSTALL_FROM_API: 1
 
       - run: brew test-bot --only-formulae --only-json-tab --root-url="https://ghcr.io/v2/carlocab/personal"
         if: github.event_name == 'pull_request'
