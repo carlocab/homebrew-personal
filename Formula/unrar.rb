@@ -14,9 +14,9 @@ class Unrar < Formula
     root_url "https://ghcr.io/v2/carlocab/personal"
     sha256 cellar: :any,                 arm64_sequoia: "722fc8feb62166154794e1a2c360f17720b0820c3d2a7afbb6e19e11ca5ec9f9"
     sha256 cellar: :any,                 arm64_sonoma:  "c7e117b0488d86217814cf0efd34db3c17b3a1fc132f45935a7ced137ba9c33a"
+    sha256 cellar: :any_skip_relocation, arm64_linux:   "5574b29df97ae259bada086b737b8d4e6e14348b09161e8ccad2911335ce7d80"
     sha256 cellar: :any,                 ventura:       "fb6fbf52e4e73ec54171d9ba9677ecc00d950993ef19cc11c0014b74955aad1f"
     sha256 cellar: :any_skip_relocation, x86_64_linux:  "061bfb66ee9e2294a13f5b97a6a97a188dba6454af59e47338fa1b262df57e3b"
-    sha256 cellar: :any_skip_relocation, arm64_linux:   "5574b29df97ae259bada086b737b8d4e6e14348b09161e8ccad2911335ce7d80"
   end
 
   def install

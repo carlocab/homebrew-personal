@@ -38,6 +38,6 @@ class Gllvm < Formula
     ENV["LLVM_COMPILER_PATH"] = Formula["llvm"].opt_bin
     system bin/"gclang", "hello.c", "-o", "hello"
     system bin/"get-bc", "hello"
-    assert_predicate testpath/"hello.bc", :exist?
+    assert_path_exists testpath/"hello.bc"
   end
 end

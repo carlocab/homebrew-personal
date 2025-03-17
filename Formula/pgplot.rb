@@ -143,8 +143,8 @@ class Pgplot < Formula
     # Produce PNG output with both programs and check if identical
     system "./pgtest"
     system "./cpgtest"
-    assert_predicate testpath/"pgtest.png", :exist?
-    assert_predicate testpath/"cpgtest.png", :exist?
+    assert_path_exists testpath/"pgtest.png"
+    assert_path_exists testpath/"cpgtest.png"
     assert_equal (testpath/"pgtest.png").read, (testpath/"cpgtest.png").read
   end
 end
